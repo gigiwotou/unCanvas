@@ -114,6 +114,7 @@ export default function ModelSettingsPage() {
   const providerOptions = {
     gemini: { name: 'Google Gemini', models: 'gemini-2.0-flash-exp' },
     openai: { name: 'OpenAI', models: 'gpt-4o, gpt-4o-mini' },
+    ai302: { name: '302.AI', models: 'gpt-4o, claude-3, dall-e-3' },
   };
 
   return (
@@ -244,6 +245,7 @@ export default function ModelSettingsPage() {
                 >
                   <option value="gemini">Google Gemini</option>
                   <option value="openai">OpenAI</option>
+                  <option value="ai302">302.AI</option>
                 </select>
               </div>
 

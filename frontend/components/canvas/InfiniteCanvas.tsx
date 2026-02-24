@@ -10,6 +10,9 @@ interface InfiniteCanvasProps {
   onDeleteCard: (cardId: string) => void;
   onConnectCards: (fromId: string, toId: string, storyboardId: string) => void;
   onDeleteConnection: (storyboardId: string, fromId: string, toId: string) => void;
+  scale?: number;
+  onZoomIn?: () => void;
+  onZoomOut?: () => void;
 }
 
 export default function InfiniteCanvas({
@@ -19,6 +22,9 @@ export default function InfiniteCanvas({
   onDeleteCard,
   onConnectCards,
   onDeleteConnection,
+  scale = 1,
+  onZoomIn,
+  onZoomOut,
 }: InfiniteCanvasProps) {
   const canvasRef = useRef<HTMLDivElement>(null);
   const [draggingStoryboard, setDraggingStoryboard] = useState<string | null>(null);
@@ -26,6 +32,9 @@ export default function InfiniteCanvas({
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [connecting, setConnecting] = useState<{ from: string; storyboardId: string } | null>(null);
   const [tempConnection, setTempConnection] = useState<{ x: number; y: number } | null>(null);
+  const [canvasOffset, setCanvasOffset] = useState({ x: 0, y: 0 });
+  const [isPanning, setIsPanning] = useState(false);
+  const [panStart, setPanStart] = useState({ x: 0, y: 0 });
 
   const handleStoryboardMouseDown = (e: React.MouseEvent, storyboard: Storyboard) => {
     if ((e.target as HTMLElement).closest('.no-drag')) return;
@@ -48,6 +57,13 @@ export default function InfiniteCanvas({
   };
 
   const handleMouseMove = useCallback((e: MouseEvent) => {
+    if (isPanning) {
+      const dx = e.clientX - panStart.x;
+      const dy = e.clientY - panStart.y;
+      setCanvasOffset(prev => ({ x: prev.x + dx, y: prev.y + dy }));
+      setPanStart({ x: e.clientX, y: e.clientY });
+      return;
+    }
     if (draggingStoryboard) {
       const newX = e.clientX - dragOffset.x;
       const newY = e.clientY - dragOffset.y;
@@ -67,23 +83,47 @@ export default function InfiniteCanvas({
         });
       }
     }
-  }, [draggingStoryboard, draggingCard, dragOffset, connecting, onUpdateStoryboard, onUpdateCard]);
+  }, [isPanning, panStart, draggingStoryboard, draggingCard, dragOffset, connecting, onUpdateStoryboard, onUpdateCard]);
 
   const handleMouseUp = useCallback(() => {
     setDraggingStoryboard(null);
     setDraggingCard(null);
     setConnecting(null);
     setTempConnection(null);
+    setIsPanning(false);
   }, []);
 
+  const handleMouseDown = useCallback((e: MouseEvent) => {
+    if (e.button === 1) {
+      e.preventDefault();
+      setIsPanning(true);
+      setPanStart({ x: e.clientX, y: e.clientY });
+    }
+  }, []);
+
+  const handleWheel = useCallback((e: WheelEvent) => {
+    if (e.ctrlKey) {
+      e.preventDefault();
+      if (e.deltaY < 0) {
+        onZoomIn?.();
+      } else {
+        onZoomOut?.();
+      }
+    }
+  }, [onZoomIn, onZoomOut]);
+
   useEffect(() => {
+    window.addEventListener('mousedown', handleMouseDown);
     window.addEventListener('mousemove', handleMouseMove);
     window.addEventListener('mouseup', handleMouseUp);
+    window.addEventListener('wheel', handleWheel, { passive: false });
     return () => {
+      window.removeEventListener('mousedown', handleMouseDown);
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
+      window.removeEventListener('wheel', handleWheel);
     };
-  }, [handleMouseMove, handleMouseUp]);
+  }, [handleMouseDown, handleMouseMove, handleMouseUp, handleWheel]);
 
   const handleConnectorMouseDown = (e: React.MouseEvent, cardId: string, storyboardId: string) => {
     e.stopPropagation();
@@ -179,16 +219,23 @@ export default function InfiniteCanvas({
       ref={canvasRef}
       className="absolute inset-0 w-full h-full dot-pattern overflow-hidden"
     >
-      <svg className="absolute inset-0 w-full h-full pointer-events-none">
-        {storyboards.map(sb => (
-          <g key={`connections-${sb.id}`}>
-            {renderConnections(sb)}
-            {renderTempConnection(sb)}
-          </g>
-        ))}
-      </svg>
+      <div style={{ 
+        transform: `scale(${scale}) translate(${canvasOffset.x}px, ${canvasOffset.y}px)`, 
+        transformOrigin: 'top left', 
+        width: '100%', 
+        height: '100%',
+        transition: isPanning ? 'none' : 'transform 0.1s ease-out',
+      }}>
+        <svg className="absolute inset-0 w-full h-full pointer-events-none">
+          {storyboards.map(sb => (
+            <g key={`connections-${sb.id}`}>
+              {renderConnections(sb)}
+              {renderTempConnection(sb)}
+            </g>
+          ))}
+        </svg>
 
-      {storyboards.map(storyboard => (
+        {storyboards.map(storyboard => (
         <div
           key={storyboard.id}
           className="absolute bg-gray-800/60 backdrop-blur-lg rounded-2xl shadow-2xl flex flex-col select-none overflow-hidden border border-gray-700/50"
@@ -282,6 +329,7 @@ export default function InfiniteCanvas({
           </div>
         </div>
       ))}
+      </div>
     </div>
   );
 }

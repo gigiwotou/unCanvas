@@ -5,6 +5,7 @@ export enum ModelProvider {
   OPENAI = 'openai',
   ANTHROPIC = 'anthropic',
   VERTEX = 'vertex',
+  AI302 = 'ai302',
 }
 
 @Entity('model_configs')

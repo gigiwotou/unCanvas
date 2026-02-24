@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import { Canvas, Storyboard, Card } from './canvas.entity';
 import { CreateCanvasDto, UpdateCanvasDto, CreateStoryboardDto, UpdateStoryboardDto, CreateCardDto, UpdateCardDto } from './dto/canvas.dto';
 import { WorkspacesService } from '../workspaces/workspaces.service';
@@ -255,7 +255,7 @@ export class CanvasService {
     const storyboardIds = storyboards.map(s => s.id);
     const cards = storyboardIds.length > 0
       ? await this.cardRepository.find({
-          where: { storyboardId: { $in: storyboardIds } } as any,
+          where: { storyboardId: In(storyboardIds) },
         })
       : [];
 

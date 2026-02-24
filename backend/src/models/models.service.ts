@@ -5,6 +5,7 @@ import { ModelConfig, ModelProvider } from './model-config.entity';
 import { ModelAdapter, StoryboardGenerationResult } from './interfaces';
 import { GeminiAdapter } from './adapters/gemini.adapter';
 import { OpenAIAdapter } from './adapters/openai.adapter';
+import { Ai302Adapter } from './adapters/ai302.adapter';
 import { UploadService } from '../common/upload.service';
 
 @Injectable()
@@ -63,6 +64,9 @@ export class ModelsService {
         break;
       case ModelProvider.OPENAI:
         adapter = new OpenAIAdapter(config.id, config.name, config.apiKey, config.apiUrl, config.modelName);
+        break;
+      case ModelProvider.AI302:
+        adapter = new Ai302Adapter(config.id, config.name, config.apiKey, config.modelName);
         break;
       default:
         throw new Error(`Unsupported provider: ${config.provider}`);

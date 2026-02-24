@@ -75,7 +75,7 @@ export interface Card {
 export interface ModelConfig {
   id: string;
   name: string;
-  provider: 'gemini' | 'openai' | 'anthropic' | 'vertex';
+  provider: 'gemini' | 'openai' | 'anthropic' | 'vertex' | 'ai302';
   apiKey: string;
   apiUrl?: string;
   modelName?: string;

@@ -13,7 +13,6 @@ export default function CanvasEditor() {
   const router = useRouter();
   const params = useParams();
   const canvasId = params.id as string;
-  const transformRef = useRef<any>(null);
 
   const { user } = useAuthStore();
   const { canvas, storyboards, setCanvas, setStoryboards, updateStoryboard, addStoryboard, removeStoryboard } = useCanvasStore();
@@ -61,21 +60,15 @@ export default function CanvasEditor() {
   };
 
   const handleZoomIn = () => {
-    if (transformRef.current) {
-      transformRef.current.zoomIn();
-    }
+    setScale(s => Math.min(s + 0.1, 3));
   };
 
   const handleZoomOut = () => {
-    if (transformRef.current) {
-      transformRef.current.zoomOut();
-    }
+    setScale(s => Math.max(s - 0.1, 0.3));
   };
 
   const handleResetView = () => {
-    if (transformRef.current) {
-      transformRef.current.resetTransform();
-    }
+    setScale(1);
   };
 
   const handleGenerate = async () => {
@@ -502,7 +495,6 @@ export default function CanvasEditor() {
 
       <div 
         className="absolute top-14 left-0 right-0 bottom-0 overflow-hidden"
-        style={{ transform: `scale(${scale})`, transformOrigin: 'top left' }}
       >
         <InfiniteCanvas
           storyboards={storyboards}
@@ -511,6 +503,9 @@ export default function CanvasEditor() {
           onDeleteCard={handleDeleteCard}
           onConnectCards={handleConnectCards}
           onDeleteConnection={handleDeleteConnection}
+          scale={scale}
+          onZoomIn={handleZoomIn}
+          onZoomOut={handleZoomOut}
         />
       </div>
 
