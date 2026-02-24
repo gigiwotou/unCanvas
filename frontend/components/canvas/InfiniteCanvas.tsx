@@ -80,16 +80,12 @@ export default function InfiniteCanvas({
       return;
     }
     e.stopPropagation();
-    const storyboard = storyboards.find(sb => sb.id === storyboardId);
-    if (!storyboard) return;
     const mouseCanvasX = (e.clientX / scale) - canvasOffset.x;
     const mouseCanvasY = (e.clientY / scale) - canvasOffset.y;
-    const cardX = mouseCanvasX - storyboard.x - LEFT_PANEL_WIDTH - HEADER_HEIGHT;
-    const cardY = mouseCanvasY - storyboard.y - HEADER_HEIGHT;
     setDraggingCard(card.id);
     setDragOffset({
-      x: cardX - card.x,
-      y: cardY - card.y,
+      x: mouseCanvasX - card.x,
+      y: mouseCanvasY - card.y,
     });
   };
 
@@ -109,14 +105,10 @@ export default function InfiniteCanvas({
       onUpdateStoryboard(draggingStoryboard, { x: newX, y: newY });
     }
     if (draggingCard) {
-      const storyboard = storyboards.find(sb => sb.cards.some(c => c.id === draggingCard));
-      if (!storyboard) return;
       const mouseCanvasX = (e.clientX / scale) - canvasOffset.x;
       const mouseCanvasY = (e.clientY / scale) - canvasOffset.y;
-      const cardPanelX = mouseCanvasX - storyboard.x - LEFT_PANEL_WIDTH - PADDING;
-      const cardPanelY = mouseCanvasY - storyboard.y - HEADER_HEIGHT - PADDING;
-      const newX = cardPanelX - dragOffset.x;
-      const newY = cardPanelY - dragOffset.y;
+      const newX = mouseCanvasX - dragOffset.x;
+      const newY = mouseCanvasY - dragOffset.y;
       onUpdateCard(draggingCard, { x: newX, y: newY });
     }
     if (connecting) {
@@ -354,12 +346,6 @@ export default function InfiniteCanvas({
               <div className="flex-1 relative overflow-hidden">
                 <div 
                   className="absolute inset-0 overflow-auto storyboard-shot-panel"
-                  style={{ 
-                    left: PADDING, 
-                    top: PADDING, 
-                    right: PADDING, 
-                    bottom: PADDING 
-                  }}
                 >
                   <svg 
                     className="absolute inset-0 w-full h-full pointer-events-none"
@@ -369,9 +355,6 @@ export default function InfiniteCanvas({
                     {renderTempConnection(storyboard)}
                   </svg>
                   {storyboard.cards.map(card => {
-                    const isOldFormat = card.x > 1000 || card.y > 1000;
-                    const displayX = isOldFormat ? card.x - storyboard.x - LEFT_PANEL_WIDTH : card.x;
-                    const displayY = isOldFormat ? card.y - storyboard.y - HEADER_HEIGHT : card.y;
                     return (
                     <div
                       key={card.id}
@@ -379,7 +362,7 @@ export default function InfiniteCanvas({
                       className={`absolute bg-gray-800 rounded-lg shadow-lg overflow-hidden ${
                         card.type === 'player' ? 'w-[576px]' : 'w-72'
                       }`}
-                      style={{ left: displayX, top: displayY, zIndex: 1 }}
+                      style={{ left: card.x + PADDING, top: card.y + PADDING, zIndex: 1 }}
                       onMouseDown={(e) => handleCardMouseDown(e, card, storyboard.id)}
                     >
                       {card.type === 'image' && (
