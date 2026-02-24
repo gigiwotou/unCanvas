@@ -120,7 +120,9 @@ export default function InfiniteCanvas({
       onUpdateCard(draggingCard, { x: newX, y: newY });
     }
     if (connecting) {
-      const rect = canvasRef.current?.getBoundingClientRect();
+      const storyboardEl = document.getElementById(`storyboard-${connecting.storyboardId}`);
+      const shotPanel = storyboardEl?.querySelector('.storyboard-shot-panel');
+      const rect = shotPanel?.getBoundingClientRect();
       if (rect) {
         setTempConnection({
           x: (e.clientX - rect.left) / scale,
@@ -179,11 +181,13 @@ export default function InfiniteCanvas({
   const handleConnectorMouseDown = (e: React.MouseEvent, cardId: string, storyboardId: string) => {
     e.stopPropagation();
     setConnecting({ from: cardId, storyboardId });
-    const rect = canvasRef.current?.getBoundingClientRect();
+    const storyboardEl = document.getElementById(`storyboard-${storyboardId}`);
+    const shotPanel = storyboardEl?.querySelector('.storyboard-shot-panel');
+    const rect = shotPanel?.getBoundingClientRect();
     if (rect) {
       setTempConnection({
-        x: e.clientX - rect.left,
-        y: e.clientY - rect.top,
+        x: (e.clientX - rect.left) / scale,
+        y: (e.clientY - rect.top) / scale,
       });
     }
   };
@@ -196,23 +200,28 @@ export default function InfiniteCanvas({
     setTempConnection(null);
   };
 
-  const getConnectorPosition = (card: Card, type: 'in' | 'out') => {
+  const getConnectorPosition = (card: Card, type: 'in' | 'out', storyboardId: string) => {
     const cardEl = document.getElementById(`card-${card.id}`);
     if (!cardEl) return { x: 0, y: 0 };
     
     const rect = cardEl.getBoundingClientRect();
-    const containerRect = canvasRef.current?.getBoundingClientRect();
-    if (!containerRect) return { x: 0, y: 0 };
+    const storyboardEl = document.getElementById(`storyboard-${storyboardId}`);
+    if (!storyboardEl) return { x: 0, y: 0 };
+    
+    const shotPanel = storyboardEl.querySelector('.storyboard-shot-panel');
+    if (!shotPanel) return { x: 0, y: 0 };
+    
+    const containerRect = shotPanel.getBoundingClientRect();
     
     if (type === 'in') {
       return {
-        x: rect.left - containerRect.left,
-        y: rect.top - containerRect.top + rect.height / 2,
+        x: (rect.left - containerRect.left) / scale,
+        y: (rect.top - containerRect.top + rect.height / 2) / scale,
       };
     } else {
       return {
-        x: rect.right - containerRect.left,
-        y: rect.top - containerRect.top + rect.height / 2,
+        x: (rect.right - containerRect.left) / scale,
+        y: (rect.top - containerRect.top + rect.height / 2) / scale,
       };
     }
   };
@@ -223,8 +232,8 @@ export default function InfiniteCanvas({
       const toCard = storyboard.cards.find(c => c.id === conn.to);
       if (!fromCard || !toCard) return null;
 
-      const start = getConnectorPosition(fromCard, 'out');
-      const end = getConnectorPosition(toCard, 'in');
+      const start = getConnectorPosition(fromCard, 'out', storyboard.id);
+      const end = getConnectorPosition(toCard, 'in', storyboard.id);
       const dx = Math.abs(end.x - start.x);
       
       const path = `M ${start.x} ${start.y} C ${start.x + dx * 0.5} ${start.y}, ${end.x - dx * 0.5} ${end.y}, ${end.x} ${end.y}`;
@@ -234,7 +243,7 @@ export default function InfiniteCanvas({
           <path
             d={path}
             stroke="rgba(167, 139, 250, 0.6)"
-            strokeWidth={3}
+            strokeWidth={3 / scale}
             fill="none"
             className="cursor-pointer hover:stroke-pink-500"
             onClick={() => onDeleteConnection(storyboard.id, conn.from, conn.to)}
@@ -250,7 +259,7 @@ export default function InfiniteCanvas({
     const fromCard = storyboard.cards.find(c => c.id === connecting.from);
     if (!fromCard) return null;
 
-    const start = getConnectorPosition(fromCard, 'out');
+    const start = getConnectorPosition(fromCard, 'out', storyboard.id);
     const dx = Math.abs(tempConnection.x - start.x);
     const path = `M ${start.x} ${start.y} C ${start.x + dx * 0.5} ${start.y}, ${tempConnection.x - dx * 0.5} ${tempConnection.y}, ${tempConnection.x} ${tempConnection.y}`;
 
@@ -284,14 +293,6 @@ export default function InfiniteCanvas({
         height: '100%',
         transition: isPanning ? 'none' : 'transform 0.1s ease-out',
       }}>
-        <svg className="absolute inset-0 w-full h-full pointer-events-none">
-          {storyboards.map(sb => (
-            <g key={`connections-${sb.id}`}>
-              {renderConnections(sb)}
-              {renderTempConnection(sb)}
-            </g>
-          ))}
-        </svg>
 
         {storyboards.map(storyboard => {
           const minHeight = getStoryboardHeight(storyboard);
@@ -299,6 +300,7 @@ export default function InfiniteCanvas({
           <div
             key={storyboard.id}
             className="absolute bg-gray-800/60 backdrop-blur-lg rounded-2xl shadow-2xl flex flex-col select-none overflow-hidden border border-gray-700/50"
+            id={`storyboard-${storyboard.id}`}
             style={{
               left: storyboard.x,
               top: storyboard.y,
@@ -351,7 +353,7 @@ export default function InfiniteCanvas({
 
               <div className="flex-1 relative overflow-hidden">
                 <div 
-                  className="absolute inset-0 overflow-auto"
+                  className="absolute inset-0 overflow-auto storyboard-shot-panel"
                   style={{ 
                     left: PADDING, 
                     top: PADDING, 
@@ -359,6 +361,13 @@ export default function InfiniteCanvas({
                     bottom: PADDING 
                   }}
                 >
+                  <svg 
+                    className="absolute inset-0 w-full h-full pointer-events-none"
+                    style={{ zIndex: 0 }}
+                  >
+                    {renderConnections(storyboard)}
+                    {renderTempConnection(storyboard)}
+                  </svg>
                   {storyboard.cards.map(card => {
                     const isOldFormat = card.x > 1000 || card.y > 1000;
                     const displayX = isOldFormat ? card.x - storyboard.x - LEFT_PANEL_WIDTH : card.x;
@@ -370,7 +379,7 @@ export default function InfiniteCanvas({
                       className={`absolute bg-gray-800 rounded-lg shadow-lg overflow-hidden ${
                         card.type === 'player' ? 'w-[576px]' : 'w-72'
                       }`}
-                      style={{ left: displayX, top: displayY }}
+                      style={{ left: displayX, top: displayY, zIndex: 1 }}
                       onMouseDown={(e) => handleCardMouseDown(e, card, storyboard.id)}
                     >
                       {card.type === 'image' && (

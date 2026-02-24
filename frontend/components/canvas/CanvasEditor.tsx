@@ -478,7 +478,10 @@ export default function CanvasEditor() {
             }`}
           >
             {isGenerating ? (
-              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              <>
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                <span>思考中...</span>
+              </>
             ) : (
               <span>{selectedModelId ? '生成' : '请先配置模型'}</span>
             )}
