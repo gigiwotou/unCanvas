@@ -506,6 +506,8 @@ export default function CanvasEditor() {
           scale={scale}
           onZoomIn={handleZoomIn}
           onZoomOut={handleZoomOut}
+          onSelectCard={setSelectedCard}
+          onSelectStoryboard={() => {}}
         />
       </div>
 

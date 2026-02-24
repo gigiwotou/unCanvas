@@ -13,6 +13,8 @@ interface InfiniteCanvasProps {
   scale?: number;
   onZoomIn?: () => void;
   onZoomOut?: () => void;
+  onSelectCard?: (card: Card | null) => void;
+  onSelectStoryboard?: (storyboard: Storyboard | null) => void;
 }
 
 export default function InfiniteCanvas({
@@ -25,6 +27,8 @@ export default function InfiniteCanvas({
   scale = 1,
   onZoomIn,
   onZoomOut,
+  onSelectCard,
+  onSelectStoryboard,
 }: InfiniteCanvasProps) {
   const canvasRef = useRef<HTMLDivElement>(null);
   const [draggingStoryboard, setDraggingStoryboard] = useState<string | null>(null);
@@ -37,53 +41,75 @@ export default function InfiniteCanvas({
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
 
   const handleStoryboardMouseDown = (e: React.MouseEvent, storyboard: Storyboard) => {
-    if ((e.target as HTMLElement).closest('.no-drag')) return;
+    if (!(e.target as HTMLElement).closest('.no-drag')) return;
+    if (e.button === 1) {
+      e.preventDefault();
+      e.stopPropagation();
+      setIsPanning(true);
+      setPanStart({ x: e.clientX, y: e.clientY });
+      return;
+    }
     e.stopPropagation();
+    const mouseCanvasX = (e.clientX / scale) - canvasOffset.x;
+    const mouseCanvasY = (e.clientY / scale) - canvasOffset.y;
     setDraggingStoryboard(storyboard.id);
     setDragOffset({
-      x: e.clientX - storyboard.x,
-      y: e.clientY - storyboard.y,
+      x: mouseCanvasX - storyboard.x,
+      y: mouseCanvasY - storyboard.y,
     });
   };
 
   const handleCardMouseDown = (e: React.MouseEvent, card: Card, storyboardId: string) => {
     if ((e.target as HTMLElement).closest('.no-drag')) return;
+    if (e.button === 1) {
+      e.preventDefault();
+      e.stopPropagation();
+      setIsPanning(true);
+      setPanStart({ x: e.clientX, y: e.clientY });
+      return;
+    }
     e.stopPropagation();
+    const mouseCanvasX = (e.clientX / scale) - canvasOffset.x;
+    const mouseCanvasY = (e.clientY / scale) - canvasOffset.y;
     setDraggingCard(card.id);
     setDragOffset({
-      x: e.clientX - card.x,
-      y: e.clientY - card.y,
+      x: mouseCanvasX - card.x,
+      y: mouseCanvasY - card.y,
     });
   };
 
   const handleMouseMove = useCallback((e: MouseEvent) => {
     if (isPanning) {
-      const dx = e.clientX - panStart.x;
-      const dy = e.clientY - panStart.y;
+      const dx = (e.clientX - panStart.x) / scale;
+      const dy = (e.clientY - panStart.y) / scale;
       setCanvasOffset(prev => ({ x: prev.x + dx, y: prev.y + dy }));
       setPanStart({ x: e.clientX, y: e.clientY });
       return;
     }
     if (draggingStoryboard) {
-      const newX = e.clientX - dragOffset.x;
-      const newY = e.clientY - dragOffset.y;
+      const mouseCanvasX = (e.clientX / scale) - canvasOffset.x;
+      const mouseCanvasY = (e.clientY / scale) - canvasOffset.y;
+      const newX = mouseCanvasX - dragOffset.x;
+      const newY = mouseCanvasY - dragOffset.y;
       onUpdateStoryboard(draggingStoryboard, { x: newX, y: newY });
     }
     if (draggingCard) {
-      const newX = e.clientX - dragOffset.x;
-      const newY = e.clientY - dragOffset.y;
+      const mouseCanvasX = (e.clientX / scale) - canvasOffset.x;
+      const mouseCanvasY = (e.clientY / scale) - canvasOffset.y;
+      const newX = mouseCanvasX - dragOffset.x;
+      const newY = mouseCanvasY - dragOffset.y;
       onUpdateCard(draggingCard, { x: newX, y: newY });
     }
     if (connecting) {
       const rect = canvasRef.current?.getBoundingClientRect();
       if (rect) {
         setTempConnection({
-          x: e.clientX - rect.left,
-          y: e.clientY - rect.top,
+          x: (e.clientX - rect.left) / scale,
+          y: (e.clientY - rect.top) / scale,
         });
       }
     }
-  }, [isPanning, panStart, draggingStoryboard, draggingCard, dragOffset, connecting, onUpdateStoryboard, onUpdateCard]);
+  }, [isPanning, panStart, draggingStoryboard, draggingCard, dragOffset, canvasOffset, connecting, onUpdateStoryboard, onUpdateCard, scale]);
 
   const handleMouseUp = useCallback(() => {
     setDraggingStoryboard(null);
@@ -112,18 +138,24 @@ export default function InfiniteCanvas({
     }
   }, [onZoomIn, onZoomOut]);
 
+  const handleContextMenu = useCallback((e: MouseEvent) => {
+    e.preventDefault();
+  }, []);
+
   useEffect(() => {
     window.addEventListener('mousedown', handleMouseDown);
     window.addEventListener('mousemove', handleMouseMove);
     window.addEventListener('mouseup', handleMouseUp);
     window.addEventListener('wheel', handleWheel, { passive: false });
+    window.addEventListener('contextmenu', handleContextMenu);
     return () => {
       window.removeEventListener('mousedown', handleMouseDown);
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
       window.removeEventListener('wheel', handleWheel);
+      window.removeEventListener('contextmenu', handleContextMenu);
     };
-  }, [handleMouseDown, handleMouseMove, handleMouseUp, handleWheel]);
+  }, [handleMouseDown, handleMouseMove, handleMouseUp, handleWheel, handleContextMenu]);
 
   const handleConnectorMouseDown = (e: React.MouseEvent, cardId: string, storyboardId: string) => {
     e.stopPropagation();
