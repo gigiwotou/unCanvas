@@ -43,6 +43,7 @@ interface CanvasState {
   setCanvas: (canvas: Canvas | null) => void;
   setStoryboards: (storyboards: Storyboard[]) => void;
   updateStoryboard: (id: string, updates: Partial<Storyboard>) => void;
+  updateCard: (storyboardId: string, cardId: string, updates: Partial<Card>) => void;
   addStoryboard: (storyboard: Storyboard) => void;
   removeStoryboard: (id: string) => void;
 }
@@ -56,6 +57,19 @@ export const useCanvasStore = create<CanvasState>((set) => ({
     set((state) => ({
       storyboards: state.storyboards.map((sb) =>
         sb.id === id ? { ...sb, ...updates } : sb
+      ),
+    })),
+  updateCard: (storyboardId, cardId, updates) =>
+    set((state) => ({
+      storyboards: state.storyboards.map((sb) =>
+        sb.id === storyboardId
+          ? {
+              ...sb,
+              cards: sb.cards.map((card) =>
+                card.id === cardId ? { ...card, ...updates } : card
+              ),
+            }
+          : sb
       ),
     })),
   addStoryboard: (storyboard) =>

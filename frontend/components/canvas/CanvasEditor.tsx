@@ -15,7 +15,7 @@ export default function CanvasEditor() {
   const canvasId = params.id as string;
 
   const { user } = useAuthStore();
-  const { canvas, storyboards, setCanvas, setStoryboards, updateStoryboard, addStoryboard, removeStoryboard } = useCanvasStore();
+  const { canvas, storyboards, setCanvas, setStoryboards, updateStoryboard, updateCard, addStoryboard, removeStoryboard } = useCanvasStore();
   const { viewport, setViewport, isGenerating, setIsGenerating } = useUIStore();
   
   const [modelConfigs, setModelConfigs] = useState<ModelConfig[]>([]);
@@ -132,7 +132,7 @@ export default function CanvasEditor() {
       const { data: card } = await canvasApi.createCard({
         storyboardId: storyboard.id,
         type: 'image',
-        x: PADDING + LEFT_PANEL_WIDTH + (colIndex * (CARD_WIDTH + CARD_GAP)),
+        x: PADDING + (colIndex * (CARD_WIDTH + CARD_GAP)),
         y: PADDING + (rowIndex * CARD_HEIGHT_WITH_GAP),
         title: shot.title,
         description: shot.prompt,
@@ -143,7 +143,7 @@ export default function CanvasEditor() {
 
     const rowIndex = Math.floor((result.shots.length) / CARDS_PER_ROW);
     const colIndex = (result.shots.length) % CARDS_PER_ROW;
-    const playerX = PADDING + LEFT_PANEL_WIDTH + (colIndex * (CARD_WIDTH + CARD_GAP));
+    const playerX = PADDING + (colIndex * (CARD_WIDTH + CARD_GAP));
     const playerY = PADDING + (rowIndex * CARD_HEIGHT_WITH_GAP);
 
     const { data: playerCard } = await canvasApi.createCard({
@@ -190,6 +190,10 @@ export default function CanvasEditor() {
   };
 
   const handleUpdateCard = async (cardId: string, updates: Partial<Card>) => {
+    const storyboard = storyboards.find(sb => sb.cards.some(c => c.id === cardId));
+    if (storyboard) {
+      updateCard(storyboard.id, cardId, updates);
+    }
     try {
       await canvasApi.updateCard(cardId, updates);
     } catch (err) {
@@ -203,6 +207,16 @@ export default function CanvasEditor() {
       loadCanvas();
     } catch (err) {
       console.error('Failed to delete card:', err);
+    }
+  };
+
+  const handleDeleteStoryboard = async (storyboardId: string) => {
+    if (!confirm('确定要删除这个故事板吗？')) return;
+    try {
+      await canvasApi.removeStoryboard(storyboardId);
+      loadCanvas();
+    } catch (err) {
+      console.error('Failed to delete storyboard:', err);
     }
   };
 
@@ -508,6 +522,7 @@ export default function CanvasEditor() {
           onZoomOut={handleZoomOut}
           onSelectCard={setSelectedCard}
           onSelectStoryboard={() => {}}
+          onDeleteStoryboard={handleDeleteStoryboard}
         />
       </div>
 

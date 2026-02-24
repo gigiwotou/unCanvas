@@ -15,7 +15,16 @@ interface InfiniteCanvasProps {
   onZoomOut?: () => void;
   onSelectCard?: (card: Card | null) => void;
   onSelectStoryboard?: (storyboard: Storyboard | null) => void;
+  onDeleteStoryboard?: (storyboardId: string) => void;
 }
+
+const HEADER_HEIGHT = 60;
+const LEFT_PANEL_WIDTH = 320;
+const CARD_WIDTH = 288;
+const CARD_HEIGHT = 200;
+const CARD_GAP = 20;
+const PADDING = 20;
+const CARDS_PER_ROW = 8;
 
 export default function InfiniteCanvas({
   storyboards,
@@ -29,6 +38,7 @@ export default function InfiniteCanvas({
   onZoomOut,
   onSelectCard,
   onSelectStoryboard,
+  onDeleteStoryboard,
 }: InfiniteCanvasProps) {
   const canvasRef = useRef<HTMLDivElement>(null);
   const [draggingStoryboard, setDraggingStoryboard] = useState<string | null>(null);
@@ -61,6 +71,7 @@ export default function InfiniteCanvas({
 
   const handleCardMouseDown = (e: React.MouseEvent, card: Card, storyboardId: string) => {
     if ((e.target as HTMLElement).closest('.no-drag')) return;
+    if ((e.target as HTMLElement).closest('button')) return;
     if (e.button === 1) {
       e.preventDefault();
       e.stopPropagation();
@@ -69,12 +80,16 @@ export default function InfiniteCanvas({
       return;
     }
     e.stopPropagation();
+    const storyboard = storyboards.find(sb => sb.id === storyboardId);
+    if (!storyboard) return;
     const mouseCanvasX = (e.clientX / scale) - canvasOffset.x;
     const mouseCanvasY = (e.clientY / scale) - canvasOffset.y;
+    const cardX = mouseCanvasX - storyboard.x - LEFT_PANEL_WIDTH - HEADER_HEIGHT;
+    const cardY = mouseCanvasY - storyboard.y - HEADER_HEIGHT;
     setDraggingCard(card.id);
     setDragOffset({
-      x: mouseCanvasX - card.x,
-      y: mouseCanvasY - card.y,
+      x: cardX - card.x,
+      y: cardY - card.y,
     });
   };
 
@@ -94,10 +109,14 @@ export default function InfiniteCanvas({
       onUpdateStoryboard(draggingStoryboard, { x: newX, y: newY });
     }
     if (draggingCard) {
+      const storyboard = storyboards.find(sb => sb.cards.some(c => c.id === draggingCard));
+      if (!storyboard) return;
       const mouseCanvasX = (e.clientX / scale) - canvasOffset.x;
       const mouseCanvasY = (e.clientY / scale) - canvasOffset.y;
-      const newX = mouseCanvasX - dragOffset.x;
-      const newY = mouseCanvasY - dragOffset.y;
+      const cardPanelX = mouseCanvasX - storyboard.x - LEFT_PANEL_WIDTH - PADDING;
+      const cardPanelY = mouseCanvasY - storyboard.y - HEADER_HEIGHT - PADDING;
+      const newX = cardPanelX - dragOffset.x;
+      const newY = cardPanelY - dragOffset.y;
       onUpdateCard(draggingCard, { x: newX, y: newY });
     }
     if (connecting) {
@@ -109,7 +128,7 @@ export default function InfiniteCanvas({
         });
       }
     }
-  }, [isPanning, panStart, draggingStoryboard, draggingCard, dragOffset, canvasOffset, connecting, onUpdateStoryboard, onUpdateCard, scale]);
+  }, [isPanning, panStart, draggingStoryboard, draggingCard, dragOffset, canvasOffset, connecting, storyboards, onUpdateStoryboard, onUpdateCard, scale]);
 
   const handleMouseUp = useCallback(() => {
     setDraggingStoryboard(null);
@@ -246,6 +265,13 @@ export default function InfiniteCanvas({
     );
   };
 
+  const getStoryboardHeight = (storyboard: Storyboard) => {
+    const maxCardsPerRow = Math.max(...storyboard.cards.map((_, i) => i + 1), 1);
+    const rows = Math.ceil(maxCardsPerRow / CARDS_PER_ROW);
+    const minContentHeight = PADDING * 2 + rows * (CARD_HEIGHT + CARD_GAP);
+    return HEADER_HEIGHT + 80 + minContentHeight;
+  };
+
   return (
     <div
       ref={canvasRef}
@@ -267,100 +293,140 @@ export default function InfiniteCanvas({
           ))}
         </svg>
 
-        {storyboards.map(storyboard => (
-        <div
-          key={storyboard.id}
-          className="absolute bg-gray-800/60 backdrop-blur-lg rounded-2xl shadow-2xl flex flex-col select-none overflow-hidden border border-gray-700/50"
-          style={{
-            left: storyboard.x,
-            top: storyboard.y,
-            width: storyboard.width,
-          }}
-          onMouseDown={(e) => handleStoryboardMouseDown(e, storyboard)}
-        >
-          <div className="bg-gray-900/70 p-3 flex justify-between items-center flex-shrink-0 cursor-move no-drag">
-            <h2 className="font-bold text-white truncate flex-1">{storyboard.title}</h2>
-          </div>
-
-          <div className="flex flex-1 overflow-hidden">
-            <div className="w-80 p-4 overflow-y-auto bg-gray-900/30 flex-shrink-0 border-r border-gray-700/50">
-              <h3 className="text-sm font-semibold text-gray-400 mb-2 border-b border-gray-700 pb-2">主题</h3>
-              <p className="text-white mb-4">{storyboard.title}</p>
-
-              {storyboard.scriptText && (
-                <>
-                  <h3 className="text-sm font-semibold text-gray-400 mb-2 border-b border-gray-700 pb-2">剧本</h3>
-                  <p className="text-gray-300 text-sm whitespace-pre-wrap">{storyboard.scriptText}</p>
-                </>
-              )}
+        {storyboards.map(storyboard => {
+          const minHeight = getStoryboardHeight(storyboard);
+          return (
+          <div
+            key={storyboard.id}
+            className="absolute bg-gray-800/60 backdrop-blur-lg rounded-2xl shadow-2xl flex flex-col select-none overflow-hidden border border-gray-700/50"
+            style={{
+              left: storyboard.x,
+              top: storyboard.y,
+              width: storyboard.width,
+              minHeight: minHeight,
+            }}
+            onMouseDown={(e) => handleStoryboardMouseDown(e, storyboard)}
+          >
+            <div className="bg-gray-900/70 p-3 flex justify-between items-center flex-shrink-0 cursor-move no-drag">
+              <h2 className="font-bold text-white truncate flex-1">{storyboard.title}</h2>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onDeleteStoryboard?.(storyboard.id);
+                }}
+                className="w-7 h-7 flex items-center justify-center rounded-lg bg-red-600/80 hover:bg-red-600 text-white text-sm transition"
+              >
+                ×
+              </button>
             </div>
 
-            <div className="flex-1 relative p-4 overflow-auto">
-              <div className="relative" style={{ minWidth: 800, minHeight: 600 }}>
-                {storyboard.cards.map(card => (
-                  <div
-                    key={card.id}
-                    id={`card-${card.id}`}
-                    className={`absolute bg-gray-800 rounded-lg shadow-lg overflow-hidden ${
-                      card.type === 'player' ? 'w-[576px]' : 'w-72'
-                    }`}
-                    style={{ left: card.x, top: card.y }}
-                    onMouseDown={(e) => handleCardMouseDown(e, card, storyboard.id)}
-                  >
-                    {card.type === 'image' && (
-                      <>
-                        <div className="absolute -left-2 top-1/2 -translate-y-1/2 w-4 h-4 bg-gray-500 rounded-full border-2 border-gray-800 z-10 cursor-crosshair"
+            <div className="flex flex-1 overflow-hidden">
+              <div className="w-80 p-4 overflow-y-auto bg-gray-900/30 flex-shrink-0 border-r border-gray-700/50">
+                <h3 className="text-sm font-semibold text-gray-400 mb-2 border-b border-gray-700 pb-2">主题</h3>
+                <p className="text-white mb-4">{storyboard.title}</p>
+
+                {storyboard.characterReferenceImage && (
+                  <>
+                    <h3 className="text-sm font-semibold text-gray-400 mb-2 border-b border-gray-700 pb-2">角色参考</h3>
+                    <img src={storyboard.characterReferenceImage} alt="角色参考" className="w-full h-auto object-cover rounded-md mb-4" />
+                  </>
+                )}
+
+                {storyboard.sceneReferenceImage && (
+                  <>
+                    <h3 className="text-sm font-semibold text-gray-400 mb-2 border-b border-gray-700 pb-2">场景参考</h3>
+                    <img src={storyboard.sceneReferenceImage} alt="场景参考" className="w-full h-auto object-cover rounded-md mb-4" />
+                  </>
+                )}
+
+                {storyboard.scriptText && (
+                  <>
+                    <h3 className="text-sm font-semibold text-gray-400 mb-2 border-b border-gray-700 pb-2">剧本</h3>
+                    <p className="text-gray-300 text-sm whitespace-pre-wrap">{storyboard.scriptText}</p>
+                  </>
+                )}
+              </div>
+
+              <div className="flex-1 relative overflow-hidden">
+                <div 
+                  className="absolute inset-0 overflow-auto"
+                  style={{ 
+                    left: PADDING, 
+                    top: PADDING, 
+                    right: PADDING, 
+                    bottom: PADDING 
+                  }}
+                >
+                  {storyboard.cards.map(card => {
+                    const isOldFormat = card.x > 1000 || card.y > 1000;
+                    const displayX = isOldFormat ? card.x - storyboard.x - LEFT_PANEL_WIDTH : card.x;
+                    const displayY = isOldFormat ? card.y - storyboard.y - HEADER_HEIGHT : card.y;
+                    return (
+                    <div
+                      key={card.id}
+                      id={`card-${card.id}`}
+                      className={`absolute bg-gray-800 rounded-lg shadow-lg overflow-hidden ${
+                        card.type === 'player' ? 'w-[576px]' : 'w-72'
+                      }`}
+                      style={{ left: displayX, top: displayY }}
+                      onMouseDown={(e) => handleCardMouseDown(e, card, storyboard.id)}
+                    >
+                      {card.type === 'image' && (
+                        <>
+                          <div className="absolute -left-2 top-1/2 -translate-y-1/2 w-4 h-4 bg-gray-500 rounded-full border-2 border-gray-800 z-10 cursor-crosshair"
+                            onMouseUp={() => handleConnectorMouseUp(card.id, storyboard.id)}
+                          />
+                          <div className="absolute -right-2 top-1/2 -translate-y-1/2 w-4 h-4 bg-gray-500 rounded-full border-2 border-gray-800 z-10 cursor-crosshair"
+                            onMouseDown={(e) => handleConnectorMouseDown(e, card.id, storyboard.id)}
+                          />
+                        </>
+                      )}
+                      
+                      {card.type === 'player' && (
+                        <div className="absolute -left-2 top-1/2 -translate-y-1/2 w-4 h-4 bg-gray-500 rounded-full border-2 border-gray-800 z-10"
                           onMouseUp={() => handleConnectorMouseUp(card.id, storyboard.id)}
                         />
-                        <div className="absolute -right-2 top-1/2 -translate-y-1/2 w-4 h-4 bg-gray-500 rounded-full border-2 border-gray-800 z-10 cursor-crosshair"
-                          onMouseDown={(e) => handleConnectorMouseDown(e, card.id, storyboard.id)}
-                        />
-                      </>
-                    )}
-                    
-                    {card.type === 'player' && (
-                      <div className="absolute -left-2 top-1/2 -translate-y-1/2 w-4 h-4 bg-gray-500 rounded-full border-2 border-gray-800 z-10"
-                        onMouseUp={() => handleConnectorMouseUp(card.id, storyboard.id)}
-                      />
-                    )}
-
-                    <div className="w-full h-48 bg-gray-700 flex items-center justify-center">
-                      {card.isLoading ? (
-                        <div className="w-10 h-10 border-4 border-gray-600 border-t-blue-500 rounded-full animate-spin" />
-                      ) : card.imageUrl ? (
-                        <img src={card.imageUrl} alt={card.title} className="w-full h-full object-cover" />
-                      ) : (
-                        <span className="text-gray-500">未生成</span>
                       )}
-                    </div>
-                    <div className="p-3 bg-gray-900/50">
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <h4 className="font-semibold text-white truncate text-sm">{card.title}</h4>
-                          {card.cameraMovement && (
-                            <p className="text-xs text-gray-400 mt-1">{card.cameraMovement}</p>
-                          )}
-                        </div>
-                        {card.type === 'image' && (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onDeleteCard(card.id);
-                            }}
-                            className="text-gray-500 hover:text-red-500 ml-2"
-                          >
-                            ×
-                          </button>
+
+                      <div className="w-full h-48 bg-gray-700 flex items-center justify-center">
+                        {card.isLoading ? (
+                          <div className="w-10 h-10 border-4 border-gray-600 border-t-blue-500 rounded-full animate-spin" />
+                        ) : card.imageUrl ? (
+                          <img src={card.imageUrl} alt={card.title} className="w-full h-full object-cover" />
+                        ) : (
+                          <span className="text-gray-500">未生成</span>
                         )}
                       </div>
+                      <div className="p-3 bg-gray-900/50">
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <h4 className="font-semibold text-white truncate text-sm">{card.title}</h4>
+                            {card.cameraMovement && (
+                              <p className="text-xs text-gray-400 mt-1">{card.cameraMovement}</p>
+                            )}
+                          </div>
+                          {card.type === 'image' && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onDeleteCard(card.id);
+                              }}
+                              className="text-gray-500 hover:text-red-500 ml-2"
+                            >
+                              ×
+                            </button>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  )})}
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      ))}
+        )})}
       </div>
     </div>
   );

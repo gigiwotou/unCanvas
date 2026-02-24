@@ -45,23 +45,34 @@ export class CreateStoryboardDto {
 
   @ApiPropertyOptional({ example: 100 })
   @IsOptional()
-  @IsNumber()
   x?: number;
 
   @ApiPropertyOptional({ example: 100 })
   @IsOptional()
-  @IsNumber()
   y?: number;
 
   @ApiPropertyOptional({ example: 800 })
   @IsOptional()
-  @IsNumber()
   width?: number;
 
   @ApiPropertyOptional({ example: 600 })
   @IsOptional()
-  @IsNumber()
   height?: number;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  scriptText?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  characterReferenceImage?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  sceneReferenceImage?: string;
 }
 
 export class UpdateStoryboardDto {
@@ -72,21 +83,18 @@ export class UpdateStoryboardDto {
 
   @ApiPropertyOptional()
   @IsOptional()
-  @IsNumber()
   x?: number;
 
   @ApiPropertyOptional()
   @IsOptional()
-  @IsNumber()
   y?: number;
 
   @ApiPropertyOptional()
   @IsOptional()
-  @IsNumber()
   width?: number;
 
   @ApiPropertyOptional()
-  @IsNumber()
+  @IsOptional()
   height?: number;
 
   @ApiPropertyOptional()
@@ -149,21 +157,18 @@ export class CreateCardDto {
 export class UpdateCardDto {
   @ApiPropertyOptional()
   @IsOptional()
-  @IsNumber()
   x?: number;
 
   @ApiPropertyOptional()
   @IsOptional()
-  @IsNumber()
   y?: number;
 
   @ApiPropertyOptional()
   @IsOptional()
-  @IsNumber()
   width?: number;
 
   @ApiPropertyOptional()
-  @IsNumber()
+  @IsOptional()
   height?: number;
 
   @ApiPropertyOptional()
