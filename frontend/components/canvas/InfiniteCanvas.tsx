@@ -2,6 +2,7 @@
 
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { Storyboard, Card } from '@/types';
+import { FiTrash2 } from 'react-icons/fi';
 
 interface InfiniteCanvasProps {
   storyboards: Storyboard[];
@@ -49,6 +50,9 @@ export default function InfiniteCanvas({
   const [canvasOffset, setCanvasOffset] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
+  const [resizingStoryboard, setResizingStoryboard] = useState<string | null>(null);
+  const [collapsedScripts, setCollapsedScripts] = useState<Record<string, boolean>>({});
+  const [expandedCards, setExpandedCards] = useState<Record<string, boolean>>({});
 
   const handleStoryboardMouseDown = (e: React.MouseEvent, storyboard: Storyboard) => {
     if (!(e.target as HTMLElement).closest('.no-drag')) return;
@@ -125,6 +129,16 @@ export default function InfiniteCanvas({
       newY = Math.max(minY, Math.min(newY, maxY));
       onUpdateCard(draggingCard, { x: newX, y: newY });
     }
+    if (resizingStoryboard) {
+      const storyboard = storyboards.find(sb => sb.id === resizingStoryboard);
+      if (!storyboard) return;
+      const mouseCanvasX = (e.clientX / scale) - canvasOffset.x;
+      const mouseCanvasY = (e.clientY / scale) - canvasOffset.y;
+      const newWidth = Math.max(LEFT_PANEL_WIDTH + 200, mouseCanvasX - storyboard.x);
+      const minHeight = getStoryboardHeight(storyboard);
+      const newHeight = Math.max(minHeight, mouseCanvasY - storyboard.y);
+      onUpdateStoryboard(resizingStoryboard, { width: newWidth, height: newHeight });
+    }
     if (connecting) {
       const storyboardEl = document.getElementById(`storyboard-${connecting.storyboardId}`);
       const shotPanel = storyboardEl?.querySelector('.storyboard-shot-panel');
@@ -144,6 +158,7 @@ export default function InfiniteCanvas({
     setConnecting(null);
     setTempConnection(null);
     setIsPanning(false);
+    setResizingStoryboard(null);
   }, []);
 
   const handleMouseDown = useCallback((e: MouseEvent) => {
@@ -311,6 +326,7 @@ export default function InfiniteCanvas({
               left: storyboard.x,
               top: storyboard.y,
               width: storyboard.width,
+              height: storyboard.height,
               minHeight: minHeight,
             }}
             onMouseDown={(e) => handleStoryboardMouseDown(e, storyboard)}
@@ -328,6 +344,21 @@ export default function InfiniteCanvas({
               >
                 ×
               </button>
+            </div>
+            <div
+              className="absolute bottom-0 right-0 w-4 h-4 cursor-se-resize no-drag"
+              style={{ zIndex: 10 }}
+              onMouseDown={(e) => {
+                e.stopPropagation();
+                const mouseCanvasX = (e.clientX / scale) - canvasOffset.x;
+                const mouseCanvasY = (e.clientY / scale) - canvasOffset.y;
+                setDragOffset({ x: mouseCanvasX, y: mouseCanvasY });
+                setResizingStoryboard(storyboard.id);
+              }}
+            >
+              <svg viewBox="0 0 24 24" className="w-4 h-4 text-gray-500 hover:text-gray-300">
+                <path fill="currentColor" d="M22 22H20V20H22V22ZM22 18H20V16H22V18ZM18 22H16V20H18V22ZM22 14H20V12H22V14ZM18 18H16V16H18V18ZM14 22H12V20H14V22Z" />
+              </svg>
             </div>
 
             <div className="flex flex-1 overflow-hidden">
@@ -351,8 +382,22 @@ export default function InfiniteCanvas({
 
                 {storyboard.scriptText && (
                   <>
-                    <h3 className="text-sm font-semibold text-gray-400 mb-2 border-b border-gray-700 pb-2">剧本</h3>
-                    <p className="text-gray-300 text-sm whitespace-pre-wrap">{storyboard.scriptText}</p>
+                    <div className="flex justify-between items-center mb-2 border-b border-gray-700 pb-2">
+                      <h3 className="text-sm font-semibold text-gray-400">剧本</h3>
+                      <button
+                        onClick={() => setCollapsedScripts(prev => ({ ...prev, [storyboard.id]: !prev[storyboard.id] }))}
+                        className="text-gray-500 hover:text-gray-300 text-xs"
+                      >
+                        {collapsedScripts[storyboard.id] !== false ? '展开' : '折叠'}
+                      </button>
+                    </div>
+                    <div 
+                      className={`text-gray-300 text-sm whitespace-pre-wrap transition-all duration-200 ${
+                        collapsedScripts[storyboard.id] !== false ? 'max-h-24 overflow-y-auto' : ''
+                      }`}
+                    >
+                      {storyboard.scriptText}
+                    </div>
                   </>
                 )}
               </div>
@@ -421,10 +466,15 @@ export default function InfiniteCanvas({
                               }}
                               className="text-gray-500 hover:text-red-500 ml-2"
                             >
-                              ×
+                              <FiTrash2 size={14} />
                             </button>
                           )}
                         </div>
+                        {expandedCards[card.id] && card.description && (
+                          <div className="mt-2 pt-2 border-t border-gray-700">
+                            <p className="text-xs text-gray-400 whitespace-pre-wrap">{card.description}</p>
+                          </div>
+                        )}
                       </div>
                     </div>
                   )})}

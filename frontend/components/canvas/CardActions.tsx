@@ -71,39 +71,39 @@ export default function CardActions({
   }
 
   return (
-    <div className="absolute bottom-2 left-0 right-0 px-2 flex justify-center space-x-2 bg-gradient-to-t from-gray-900/80 to-transparent pt-8 pb-2">
+    <div className="absolute bottom-2 left-0 right-0 px-2 flex justify-center space-x-1 bg-gradient-to-t from-gray-900/80 to-transparent pt-8 pb-2">
       {!showModify && !showRetry && (
         <>
           <button
             onClick={() => setShowModify(true)}
-            className="bg-blue-600/80 hover:bg-blue-600 text-white px-3 py-1.5 rounded-lg text-xs transition flex items-center space-x-1"
+            className="p-2 rounded-lg bg-blue-600/80 hover:bg-blue-600 text-white transition"
+            title="编辑"
           >
-            <FiEdit2 size={12} />
-            <span>修改</span>
+            <FiEdit2 size={16} />
           </button>
           <button
             onClick={() => {
               setRetryPrompt(card.description || '');
               setShowRetry(true);
             }}
-            className="bg-yellow-600/80 hover:bg-yellow-600 text-white px-3 py-1.5 rounded-lg text-xs transition flex items-center space-x-1"
+            className="p-2 rounded-lg bg-yellow-600/80 hover:bg-yellow-600 text-white transition"
+            title="重试"
           >
-            <FiRefreshCw size={12} />
-            <span>重试</span>
+            <FiRefreshCw size={16} />
           </button>
           <button
             onClick={() => onSimilar(card.id)}
-            className="bg-green-600/80 hover:bg-green-600 text-white px-3 py-1.5 rounded-lg text-xs transition flex items-center space-x-1"
+            className="p-2 rounded-lg bg-green-600/80 hover:bg-green-600 text-white transition"
+            title="复制"
           >
-            <FiCopy size={12} />
-            <span>相似</span>
+            <FiCopy size={16} />
           </button>
           <button
             onClick={() => onDelete(card.id)}
-            className="bg-red-600/80 hover:bg-red-600 text-white px-3 py-1.5 rounded-lg text-xs transition flex items-center space-x-1"
+            className="p-2 rounded-lg bg-red-600/80 hover:bg-red-600 text-white transition"
+            title="删除"
           >
-            <FiTrash2 size={12} />
-            <span>删除</span>
+            <FiTrash2 size={16} />
           </button>
         </>
       )}
