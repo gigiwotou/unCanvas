@@ -105,10 +105,24 @@ export default function InfiniteCanvas({
       onUpdateStoryboard(draggingStoryboard, { x: newX, y: newY });
     }
     if (draggingCard) {
+      const storyboard = storyboards.find(sb => sb.cards.some(c => c.id === draggingCard));
+      if (!storyboard) return;
+      const storyboardEl = document.getElementById(`storyboard-${storyboard.id}`);
+      const shotPanel = storyboardEl?.querySelector('.storyboard-shot-panel') as HTMLElement;
+      const panelRect = shotPanel?.getBoundingClientRect();
+      
       const mouseCanvasX = (e.clientX / scale) - canvasOffset.x;
       const mouseCanvasY = (e.clientY / scale) - canvasOffset.y;
-      const newX = mouseCanvasX - dragOffset.x;
-      const newY = mouseCanvasY - dragOffset.y;
+      let newX = mouseCanvasX - dragOffset.x;
+      let newY = mouseCanvasY - dragOffset.y;
+      
+      const minX = PADDING;
+      const minY = PADDING;
+      const maxX = panelRect ? (panelRect.width / scale) - CARD_WIDTH - PADDING : storyboard.width - LEFT_PANEL_WIDTH - CARD_WIDTH - PADDING;
+      const maxY = panelRect ? (panelRect.height / scale) - CARD_HEIGHT - PADDING : storyboard.height - CARD_HEIGHT - PADDING;
+      
+      newX = Math.max(minX, Math.min(newX, maxX));
+      newY = Math.max(minY, Math.min(newY, maxY));
       onUpdateCard(draggingCard, { x: newX, y: newY });
     }
     if (connecting) {
