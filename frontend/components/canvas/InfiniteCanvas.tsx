@@ -3,6 +3,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { Storyboard, Card } from '@/types';
 import { FiTrash2 } from 'react-icons/fi';
+import CardActions from './CardActions';
 
 interface InfiniteCanvasProps {
   storyboards: Storyboard[];
@@ -11,6 +12,9 @@ interface InfiniteCanvasProps {
   onDeleteCard: (cardId: string) => void;
   onConnectCards: (fromId: string, toId: string, storyboardId: string) => void;
   onDeleteConnection: (storyboardId: string, fromId: string, toId: string) => void;
+  onModifyCard?: (cardId: string, instruction: string) => void;
+  onRetryCard?: (cardId: string, newPrompt: string) => void;
+  onSimilarCard?: (cardId: string) => void;
   scale?: number;
   onZoomIn?: () => void;
   onZoomOut?: () => void;
@@ -34,6 +38,9 @@ export default function InfiniteCanvas({
   onDeleteCard,
   onConnectCards,
   onDeleteConnection,
+  onModifyCard,
+  onRetryCard,
+  onSimilarCard,
   scale = 1,
   onZoomIn,
   onZoomOut,
@@ -458,22 +465,22 @@ export default function InfiniteCanvas({
                               <p className="text-xs text-gray-400 mt-1">{card.cameraMovement}</p>
                             )}
                           </div>
-                          {card.type === 'image' && (
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                onDeleteCard(card.id);
-                              }}
-                              className="text-gray-500 hover:text-red-500 ml-2"
-                            >
-                              <FiTrash2 size={14} />
-                            </button>
-                          )}
                         </div>
                         {expandedCards[card.id] && card.description && (
                           <div className="mt-2 pt-2 border-t border-gray-700">
                             <p className="text-xs text-gray-400 whitespace-pre-wrap">{card.description}</p>
                           </div>
+                        )}
+                        {card.type === 'image' && (
+                          <CardActions
+                            card={card}
+                            onModify={(cardId, instruction) => onModifyCard?.(cardId, instruction)}
+                            onRetry={(cardId, newPrompt) => onRetryCard?.(cardId, newPrompt)}
+                            onSimilar={(cardId) => onSimilarCard?.(cardId)}
+                            onDelete={(cardId) => onDeleteCard(cardId)}
+                            onPlay={() => {}}
+                            onStop={() => {}}
+                          />
                         )}
                       </div>
                     </div>

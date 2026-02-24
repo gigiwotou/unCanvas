@@ -520,6 +520,9 @@ export default function CanvasEditor() {
           onDeleteCard={handleDeleteCard}
           onConnectCards={handleConnectCards}
           onDeleteConnection={handleDeleteConnection}
+          onModifyCard={handleCardModify}
+          onRetryCard={handleCardRetry}
+          onSimilarCard={handleCardSimilar}
           scale={scale}
           onZoomIn={handleZoomIn}
           onZoomOut={handleZoomOut}
