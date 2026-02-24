@@ -29,6 +29,8 @@ export default function CardActions({
   const [retryPrompt, setRetryPrompt] = useState(card.description || '');
   const [loading, setLoading] = useState(false);
 
+  const isFailed = !card.isLoading && !card.imageUrl;
+
   const handleModify = async () => {
     if (!modifyPrompt.trim()) return;
     setLoading(true);
@@ -71,40 +73,49 @@ export default function CardActions({
   }
 
   return (
-    <div className="absolute bottom-2 left-0 right-0 px-2 flex justify-center space-x-1 bg-gradient-to-t from-gray-900/80 to-transparent pt-8 pb-2">
+    <div className="p-3 bg-gray-900/50 flex justify-center items-center text-xs space-x-4">
       {!showModify && !showRetry && (
         <>
-          <button
-            onClick={() => setShowModify(true)}
-            className="p-2 rounded-lg bg-blue-600/80 hover:bg-blue-600 text-white transition"
-            title="编辑"
-          >
-            <FiEdit2 size={16} />
-          </button>
-          <button
-            onClick={() => {
-              setRetryPrompt(card.description || '');
-              setShowRetry(true);
-            }}
-            className="p-2 rounded-lg bg-yellow-600/80 hover:bg-yellow-600 text-white transition"
-            title="重试"
-          >
-            <FiRefreshCw size={16} />
-          </button>
-          <button
-            onClick={() => onSimilar(card.id)}
-            className="p-2 rounded-lg bg-green-600/80 hover:bg-green-600 text-white transition"
-            title="复制"
-          >
-            <FiCopy size={16} />
-          </button>
-          <button
-            onClick={() => onDelete(card.id)}
-            className="p-2 rounded-lg bg-red-600/80 hover:bg-red-600 text-white transition"
-            title="删除"
-          >
-            <FiTrash2 size={16} />
-          </button>
+          {isFailed ? (
+            <>
+              <button
+                onClick={() => {
+                  setRetryPrompt(card.description || '');
+                  setShowRetry(true);
+                }}
+                className="text-yellow-400 hover:text-yellow-300 font-semibold transition"
+              >
+                重试
+              </button>
+              <button
+                onClick={() => onDelete(card.id)}
+                className="hover:text-red-400 transition"
+              >
+                删除
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                onClick={() => setShowModify(true)}
+                className="hover:text-blue-400 transition"
+              >
+                修改
+              </button>
+              <button
+                onClick={() => onSimilar(card.id)}
+                className="hover:text-green-400 transition"
+              >
+                相似
+              </button>
+              <button
+                onClick={() => onDelete(card.id)}
+                className="hover:text-red-400 transition"
+              >
+                删除
+              </button>
+            </>
+          )}
         </>
       )}
 
