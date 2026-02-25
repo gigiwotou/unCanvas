@@ -208,6 +208,15 @@ export default function InfiniteCanvas({
 
   const handleConnectorMouseDown = (e: React.MouseEvent, cardId: string, storyboardId: string) => {
     e.stopPropagation();
+    
+    const storyboard = storyboards.find(sb => sb.id === storyboardId);
+    if (storyboard) {
+      const existingConnection = storyboard.connections.find(c => c.from === cardId);
+      if (existingConnection) {
+        onDeleteConnection(storyboardId, cardId, existingConnection.to);
+      }
+    }
+    
     setConnecting({ from: cardId, storyboardId });
     const storyboardEl = document.getElementById(`storyboard-${storyboardId}`);
     const shotPanel = storyboardEl?.querySelector('.storyboard-shot-panel');

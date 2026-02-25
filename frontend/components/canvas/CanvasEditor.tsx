@@ -224,7 +224,10 @@ export default function CanvasEditor() {
     const storyboard = storyboards.find(sb => sb.id === storyboardId);
     if (!storyboard) return;
     
-    const newConnections = [...storyboard.connections, { from: fromId, to: toId }];
+    const filteredConnections = storyboard.connections.filter(
+      c => c.from !== fromId && c.to !== toId
+    );
+    const newConnections = [...filteredConnections, { from: fromId, to: toId }];
     const updates = { connections: newConnections };
     
     updateStoryboard(storyboardId, updates);
