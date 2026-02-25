@@ -56,7 +56,7 @@ export default function Player({ card, onPlay, onStop }: PlayerProps) {
 
   return (
     <div className="w-full h-full flex flex-col bg-gray-900">
-      <div className="flex-1 relative">
+      <div className="relative" style={{ height: 'calc(100% - 4rem)' }}>
         <img
           src={currentImage}
           alt={`Frame ${currentFrame + 1}`}
