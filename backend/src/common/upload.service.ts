@@ -56,17 +56,18 @@ export class UploadService {
     const fs = await import('fs');
     const path = await import('path');
     
-    const dir = path.join(this.localPath, key.substring(0, 8));
+    const timestamp = key.split('-')[1]?.split('.')[0] || key.substring(0, 8);
+    const dir = path.join(this.localPath, timestamp.substring(0, 8));
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });
     }
     
-    const fullPath = path.join(this.localPath, key);
+    const fullPath = path.join(dir, key);
     fs.writeFileSync(fullPath, file);
 
     return {
-      url: `${this.baseUrl}/${key}`,
-      key,
+      url: `${this.baseUrl}/${timestamp.substring(0, 8)}/${key}`,
+      key: `${timestamp.substring(0, 8)}/${key}`,
       bucket: 'local',
     };
   }
