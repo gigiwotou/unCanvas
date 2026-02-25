@@ -129,6 +129,15 @@ export default function DashboardPage() {
                   </option>
                 ))}
               </select>
+              {selectedWorkspaceId && (
+                <button
+                  onClick={() => router.push(`/dashboard/workspaces/${selectedWorkspaceId}`)}
+                  className="bg-gray-700 hover:bg-gray-600 px-3 py-2 rounded-lg transition text-sm"
+                  title="工作区设置"
+                >
+                  设置
+                </button>
+              )}
               <button
                 onClick={() => setShowCreateWorkspace(true)}
                 className="bg-primary-600 hover:bg-primary-700 px-3 py-2 rounded-lg transition text-sm"
