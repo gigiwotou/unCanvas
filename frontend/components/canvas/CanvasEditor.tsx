@@ -360,6 +360,9 @@ export default function CanvasEditor() {
     loadCanvas();
   };
 
+  const characterFileRef = useRef<HTMLInputElement>(null);
+  const sceneFileRef = useRef<HTMLInputElement>(null);
+
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, type: 'character' | 'scene') => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -377,8 +380,14 @@ export default function CanvasEditor() {
   const clearRefImage = (type: 'character' | 'scene') => {
     if (type === 'character') {
       setCharacterImage(null);
+      if (characterFileRef.current) {
+        characterFileRef.current.value = '';
+      }
     } else {
       setSceneImage(null);
+      if (sceneFileRef.current) {
+        sceneFileRef.current.value = '';
+      }
     }
   };
 
@@ -431,6 +440,7 @@ export default function CanvasEditor() {
           <div className="h-full w-24 flex-shrink-0 flex items-center justify-center relative">
             <label className="absolute inset-0 flex items-center justify-center text-gray-400 hover:bg-white/10 transition cursor-pointer">
               <input
+                ref={characterFileRef}
                 type="file"
                 accept="image/*"
                 className="hidden"
@@ -461,6 +471,7 @@ export default function CanvasEditor() {
           <div className="h-full w-24 flex-shrink-0 flex items-center justify-center relative">
             <label className="absolute inset-0 flex items-center justify-center text-gray-400 hover:bg-white/10 transition cursor-pointer">
               <input
+                ref={sceneFileRef}
                 type="file"
                 accept="image/*"
                 className="hidden"
