@@ -4,7 +4,7 @@ import { Repository, In } from 'typeorm';
 import { Canvas, Storyboard, Card } from './canvas.entity';
 import { CreateCanvasDto, UpdateCanvasDto, CreateStoryboardDto, UpdateStoryboardDto, CreateCardDto, UpdateCardDto } from './dto/canvas.dto';
 import { WorkspacesService } from '../workspaces/workspaces.service';
-import { WorkspaceRole } from '../workspaces/workspace.entity';
+import { WorkspaceRole, WorkspaceMember } from '../workspaces/workspace.entity';
 
 @Injectable()
 export class CanvasService {
@@ -15,6 +15,8 @@ export class CanvasService {
     private storyboardRepository: Repository<Storyboard>,
     @InjectRepository(Card)
     private cardRepository: Repository<Card>,
+    @InjectRepository(WorkspaceMember)
+    private membersRepository: Repository<WorkspaceMember>,
     private workspacesService: WorkspacesService,
   ) {}
 
@@ -267,11 +269,13 @@ export class CanvasService {
       return acc;
     }, {} as Record<string, Card[]>);
 
-    const member = await this.workspacesService.getMember(canvas.workspaceId, userId);
+    const member = await this.membersRepository.findOne({
+      where: { workspaceId: canvas.workspaceId, userId },
+    });
 
     return {
       canvas,
-      userRole: member?.role,
+      userRole: member?.role || 'viewer',
       storyboards: storyboards.map(s => ({
         ...s,
         cards: cardsByStoryboard[s.id] || [],
