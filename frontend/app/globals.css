@@ -18,3 +18,9 @@ body {
   background-image: radial-gradient(#4b5563 1px, transparent 0);
   background-size: 20px 20px;
 }
+
+@keyframes dash {
+  to {
+    stroke-dashoffset: -16;
+  }
+}

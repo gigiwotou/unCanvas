@@ -282,11 +282,29 @@ export default function InfiniteCanvas({
       const toCard = storyboard.cards.find(c => c.id === conn.to);
       if (!fromCard || !toCard) return null;
 
+      const isPlayerConnection = toCard.type === 'player';
       const start = getConnectorPosition(fromCard, 'out', storyboard.id);
       const end = getConnectorPosition(toCard, 'in', storyboard.id);
       const dx = Math.abs(end.x - start.x);
       
       const path = `M ${start.x} ${start.y} C ${start.x + dx * 0.5} ${start.y}, ${end.x - dx * 0.5} ${end.y}, ${end.x} ${end.y}`;
+
+      if (isPlayerConnection) {
+        return (
+          <g key={`conn-${idx}`}>
+            <path
+              d={path}
+              stroke="#3b82f6"
+              strokeWidth={4 / scale}
+              fill="none"
+              strokeDasharray="10 6"
+              className="cursor-pointer animate-dash"
+              style={{ animation: 'dash 1s linear infinite' }}
+              onClick={() => onDeleteConnection(storyboard.id, conn.from, conn.to)}
+            />
+          </g>
+        );
+      }
 
       return (
         <g key={`conn-${idx}`}>
