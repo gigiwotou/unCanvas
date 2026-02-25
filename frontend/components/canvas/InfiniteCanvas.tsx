@@ -189,6 +189,9 @@ export default function InfiniteCanvas({
       } else {
         onZoomOut?.();
       }
+      requestAnimationFrame(() => {
+        setRenderKey(k => k + 1);
+      });
     }
   }, [onZoomIn, onZoomOut]);
 
