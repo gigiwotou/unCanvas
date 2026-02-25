@@ -60,6 +60,11 @@ export default function InfiniteCanvas({
   const [resizingStoryboard, setResizingStoryboard] = useState<string | null>(null);
   const [collapsedScripts, setCollapsedScripts] = useState<Record<string, boolean>>({});
   const [expandedCards, setExpandedCards] = useState<Record<string, boolean>>({});
+  const [renderKey, setRenderKey] = useState(0);
+
+  useEffect(() => {
+    setRenderKey(k => k + 1);
+  }, [scale]);
 
   const handleStoryboardMouseDown = (e: React.MouseEvent, storyboard: Storyboard) => {
     if (!(e.target as HTMLElement).closest('.no-drag')) return;
@@ -421,6 +426,7 @@ export default function InfiniteCanvas({
                   <svg 
                     className="absolute inset-0 w-full h-full pointer-events-none"
                     style={{ zIndex: 0 }}
+                    key={renderKey}
                   >
                     {renderConnections(storyboard)}
                     {renderTempConnection(storyboard)}
