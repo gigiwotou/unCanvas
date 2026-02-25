@@ -490,7 +490,7 @@ export default function InfiniteCanvas({
                     <div
                       key={card.id}
                       id={`card-${card.id}`}
-                      className={`absolute bg-gray-800 rounded-lg shadow-lg overflow-hidden ${
+                      className={`absolute bg-gray-800 rounded-lg shadow-lg overflow-hidden transition-all duration-200 hover:shadow-xl hover:-translate-y-1 ${
                         card.type === 'player' ? 'w-[576px] h-[384px]' : 'w-72'
                       }`}
                       style={{ left: card.x + PADDING, top: card.y + PADDING, zIndex: 1 }}
@@ -498,17 +498,17 @@ export default function InfiniteCanvas({
                     >
                       {card.type === 'image' && (
                         <>
-                          <div data-connector-type="in" className="absolute -left-2 top-1/2 -translate-y-1/2 w-4 h-4 bg-gray-500 rounded-full border-2 border-gray-800 z-10 cursor-crosshair"
+                          <div data-connector-type="in" className="absolute -left-2 top-1/2 -translate-y-1/2 w-4 h-4 bg-gray-500 rounded-full border-2 border-gray-800 z-10 cursor-crosshair transition-all duration-200 hover:scale-150 hover:bg-blue-500"
                             onMouseUp={() => handleConnectorMouseUp(card.id, storyboard.id)}
                           />
-                          <div data-connector-type="out" className="absolute -right-2 top-1/2 -translate-y-1/2 w-4 h-4 bg-gray-500 rounded-full border-2 border-gray-800 z-10 cursor-crosshair"
+                          <div data-connector-type="out" className="absolute -right-2 top-1/2 -translate-y-1/2 w-4 h-4 bg-gray-500 rounded-full border-2 border-gray-800 z-10 cursor-crosshair transition-all duration-200 hover:scale-150 hover:bg-blue-500"
                             onMouseDown={(e) => handleConnectorMouseDown(e, card.id, storyboard.id)}
                           />
                         </>
                       )}
                       
                       {card.type === 'player' && (
-                        <div data-connector-type="in" className="absolute -left-2 top-1/2 -translate-y-1/2 w-4 h-4 bg-gray-500 rounded-full border-2 border-gray-800 z-10"
+                        <div data-connector-type="in" className="absolute -left-2 top-1/2 -translate-y-1/2 w-4 h-4 bg-gray-500 rounded-full border-2 border-gray-800 z-10 transition-all duration-200 hover:scale-150 hover:bg-blue-500"
                           onMouseUp={() => handleConnectorMouseUp(card.id, storyboard.id)}
                         />
                       )}
