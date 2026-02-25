@@ -48,6 +48,16 @@ class UpdateModelConfigDto {
 
   @ApiPropertyOptional()
   @IsOptional()
+  @IsString()
+  apiUrl?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  modelName?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
   @IsBoolean()
   enabled?: boolean;
 

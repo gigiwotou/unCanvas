@@ -16,7 +16,7 @@ export default function ModelSettingsPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     name: '',
-    provider: 'gemini' as 'gemini' | 'openai',
+    provider: 'gemini' as 'gemini' | 'openai' | 'ai302',
     apiKey: '',
     apiUrl: '',
     modelName: '',
