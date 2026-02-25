@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsNumber, IsObject, IsArray, IsEnum } from 'class-validator';
+import { IsString, IsOptional, IsNumber, IsObject, IsArray, IsEnum, IsBoolean } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateCanvasDto {
@@ -152,6 +152,11 @@ export class CreateCardDto {
   @IsOptional()
   @IsString()
   cameraMovement?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsBoolean()
+  isLoading?: boolean;
 }
 
 export class UpdateCardDto {

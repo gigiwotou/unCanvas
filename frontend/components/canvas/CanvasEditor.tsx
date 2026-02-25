@@ -393,7 +393,10 @@ export default function CanvasEditor() {
         description: `${card.description}\n(修改指令: ${instruction})`,
         cameraMovement: card.cameraMovement,
         aspectRatio: card.aspectRatio || '16:9',
+        isLoading: true,
       });
+
+      loadCanvas();
 
       const { data } = await modelsApi.modifyImage({
         imageUrl: card.imageUrl || '',
@@ -401,7 +404,7 @@ export default function CanvasEditor() {
         modelConfigId: imageModelId,
       });
 
-      await canvasApi.updateCard(newCard.id, { imageUrl: data.imageUrl });
+      await canvasApi.updateCard(newCard.id, { imageUrl: data.imageUrl, isLoading: false });
       loadCanvas();
     } catch (err) {
       console.error('Failed to modify image:', err);
