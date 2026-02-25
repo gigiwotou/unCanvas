@@ -9,6 +9,14 @@ import { useAuthStore, useCanvasStore, useUIStore } from '@/store';
 import { canvasApi, modelsApi } from '@/lib/api';
 import { Storyboard, Card, ModelConfig } from '@/types';
 
+function debounce<T extends (...args: any[]) => any>(fn: T, delay: number) {
+  let timeoutId: NodeJS.Timeout;
+  return (...args: Parameters<T>) => {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => fn(...args), delay);
+  };
+}
+
 export default function CanvasEditor() {
   const router = useRouter();
   const params = useParams();
@@ -180,25 +188,44 @@ export default function CanvasEditor() {
     }
   };
 
-  const handleUpdateStoryboard = async (id: string, updates: Partial<Storyboard>) => {
+  const pendingStoryboardUpdates = useRef<Record<string, Partial<Storyboard>>>({});
+  const pendingCardUpdates = useRef<Record<string, { cardId: string; updates: Partial<Card> }>>({});
+
+  const saveStoryboardDebounced = useCallback(
+    debounce(async (id: string, updates: Partial<Storyboard>) => {
+      try {
+        await canvasApi.updateStoryboard(id, updates);
+      } catch (err) {
+        console.error('Failed to update storyboard:', err);
+      }
+    }, 500),
+    []
+  );
+
+  const saveCardDebounced = useCallback(
+    debounce(async (cardId: string, updates: Partial<Card>) => {
+      try {
+        await canvasApi.updateCard(cardId, updates);
+      } catch (err) {
+        console.error('Failed to update card:', err);
+      }
+    }, 500),
+    []
+  );
+
+  const handleUpdateStoryboard = (id: string, updates: Partial<Storyboard>) => {
     updateStoryboard(id, updates);
-    try {
-      await canvasApi.updateStoryboard(id, updates);
-    } catch (err) {
-      console.error('Failed to update storyboard:', err);
-    }
+    pendingStoryboardUpdates.current[id] = { ...pendingStoryboardUpdates.current[id], ...updates };
+    saveStoryboardDebounced(id, pendingStoryboardUpdates.current[id]);
   };
 
-  const handleUpdateCard = async (cardId: string, updates: Partial<Card>) => {
+  const handleUpdateCard = (cardId: string, updates: Partial<Card>) => {
     const storyboard = storyboards.find(sb => sb.cards.some(c => c.id === cardId));
     if (storyboard) {
       updateCard(storyboard.id, cardId, updates);
     }
-    try {
-      await canvasApi.updateCard(cardId, updates);
-    } catch (err) {
-      console.error('Failed to update card:', err);
-    }
+    pendingCardUpdates.current[cardId] = { cardId, updates: { ...pendingCardUpdates.current[cardId]?.updates, ...updates } };
+    saveCardDebounced(cardId, pendingCardUpdates.current[cardId].updates);
   };
 
   const handleDeleteCard = async (cardId: string) => {
