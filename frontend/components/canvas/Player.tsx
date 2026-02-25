@@ -61,6 +61,7 @@ export default function Player({ card, onPlay, onStop }: PlayerProps) {
           src={currentImage}
           alt={`Frame ${currentFrame + 1}`}
           className="w-full h-full object-contain"
+          draggable={false}
         />
         
         <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex items-center space-x-2 bg-black/60 px-3 py-2 rounded-full">
@@ -113,7 +114,7 @@ export default function Player({ card, onPlay, onStop }: PlayerProps) {
               idx === currentFrame ? 'border-blue-500' : 'border-transparent opacity-60 hover:opacity-100'
             }`}
           >
-            <img src={frame.imageUrl} alt={`Thumb ${idx + 1}`} className="w-full h-full object-cover" />
+            <img src={frame.imageUrl} alt={`Thumb ${idx + 1}`} className="w-full h-full object-cover" draggable={false} />
           </button>
         ))}
       </div>
