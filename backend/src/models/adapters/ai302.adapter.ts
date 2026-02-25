@@ -167,13 +167,28 @@ export class Ai302Adapter implements ModelAdapter {
     }
 
     const data = await response.json();
-    const imagePart = data.candidates?.[0]?.content?.parts?.find((p: any) => p.inlineData);
+    const parts = data.candidates?.[0]?.content?.parts;
     
-    if (!imagePart?.inlineData?.data) {
+    if (!parts || !Array.isArray(parts)) {
+      throw new Error('No image returned from 302.ai Google API');
+    }
+    
+    let imageUrl = '';
+    
+    const urlPart = parts.find((p: any) => p.url);
+    if (urlPart?.url) {
+      imageUrl = urlPart.url;
+    }
+    
+    const inlinePart = parts.find((p: any) => p.inlineData?.data);
+    if (inlinePart?.inlineData?.data) {
+      imageUrl = `data:${inlinePart.inlineData.mimeType};base64,${inlinePart.inlineData.data}`;
+    }
+
+    if (!imageUrl) {
       throw new Error('No image returned from 302.ai Google API');
     }
 
-    const imageUrl = `data:${imagePart.inlineData.mimeType};base64,${imagePart.inlineData.data}`;
     return { imageUrl };
   }
 
