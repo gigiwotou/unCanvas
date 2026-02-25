@@ -35,6 +35,15 @@ export default function CanvasEditor() {
   const [showModelSelect, setShowModelSelect] = useState(false);
   const [selectedCard, setSelectedCard] = useState<Card | null>(null);
   const [scale, setScale] = useState(1);
+  const [imageAspectRatio, setImageAspectRatio] = useState('1:1');
+
+  const aspectRatioOptions = [
+    { value: '1:1', label: '1:1' },
+    { value: '16:9', label: '16:9' },
+    { value: '4:3', label: '4:3' },
+    { value: '3:2', label: '3:2' },
+    { value: '9:16', label: '9:16' },
+  ];
 
   useEffect(() => {
     if (!user) {
@@ -173,17 +182,18 @@ export default function CanvasEditor() {
     });
 
     for (const card of cardsToCreate) {
-      generateCardImage(card.id, card.description, imageModelId);
+      generateCardImage(card.id, card.description, imageModelId, imageAspectRatio);
     }
   };
 
-  const generateCardImage = async (cardId: string, prompt: string, modelId: string) => {
+  const generateCardImage = async (cardId: string, prompt: string, modelId: string, aspectRatio: string = '1:1') => {
     try {
       await canvasApi.updateCard(cardId, { isLoading: true });
       
       const { data } = await modelsApi.generateImage({
         prompt,
         modelConfigId: modelId,
+        aspectRatio,
       });
       
       await canvasApi.updateCard(cardId, { imageUrl: data.imageUrl, isLoading: false });
@@ -309,7 +319,7 @@ export default function CanvasEditor() {
 
   const handleCardRetry = async (cardId: string, newPrompt: string) => {
     await handleUpdateCard(cardId, { isLoading: true, description: newPrompt });
-    await generateCardImage(cardId, newPrompt, imageModelId);
+    await generateCardImage(cardId, newPrompt, imageModelId, imageAspectRatio);
   };
 
   const handleCardSimilar = async (cardId: string) => {
@@ -326,7 +336,7 @@ export default function CanvasEditor() {
       cameraMovement: card.cameraMovement,
     });
 
-    await generateCardImage(newCard.id, card.description || '', imageModelId);
+    await generateCardImage(newCard.id, card.description || '', imageModelId, imageAspectRatio);
     loadCanvas();
   };
 
@@ -530,6 +540,18 @@ export default function CanvasEditor() {
               </>
             )}
           </div>
+
+          <div className="w-px h-8 bg-gray-600" />
+
+          <select
+            value={imageAspectRatio}
+            onChange={(e) => setImageAspectRatio(e.target.value)}
+            className="bg-gray-700 text-white text-sm px-2 py-1 rounded-lg focus:outline-none"
+          >
+            {aspectRatioOptions.map(option => (
+              <option key={option.value} value={option.value}>{option.label}</option>
+            ))}
+          </select>
 
           <div className="w-px h-8 bg-gray-600" />
 

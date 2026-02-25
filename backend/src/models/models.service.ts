@@ -117,9 +117,9 @@ export class ModelsService {
     }
   }
 
-  async generateImage(prompt: string, configId: string): Promise<string> {
+  async generateImage(prompt: string, configId: string, aspectRatio?: string): Promise<string> {
     const adapter = this.getAdapter(configId);
-    const result = await adapter.generateImage(prompt);
+    const result = await adapter.generateImage(prompt, { aspectRatio: aspectRatio || '1:1' });
     
     if (result.imageUrl.startsWith('data:')) {
       const uploadResult = await this.uploadService.uploadBase64Image(result.imageUrl, 'generated');

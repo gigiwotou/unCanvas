@@ -105,6 +105,11 @@ class GenerateImageDto {
   @ApiProperty()
   @IsString()
   modelConfigId: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  aspectRatio?: string;
 }
 
 class ModifyImageDto {
@@ -189,7 +194,7 @@ export class ModelsController {
   @Post('generate-image')
   @ApiOperation({ summary: '生成图片' })
   async generateImage(@Body() dto: GenerateImageDto) {
-    const imageUrl = await this.modelsService.generateImage(dto.prompt, dto.modelConfigId);
+    const imageUrl = await this.modelsService.generateImage(dto.prompt, dto.modelConfigId, dto.aspectRatio);
     return { imageUrl };
   }
 
