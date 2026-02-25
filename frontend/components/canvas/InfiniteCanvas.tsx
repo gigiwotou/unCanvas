@@ -238,21 +238,27 @@ export default function InfiniteCanvas({
   };
 
   const getConnectorPosition = (card: Card, type: 'in' | 'out', storyboardId: string) => {
-    const CARD_WIDTH = 288;
-    const CARD_HEIGHT = 252;
+    const cardEl = document.getElementById(`card-${card.id}`);
+    if (!cardEl) return { x: 0, y: 0 };
     
-    const cardX = card.x + PADDING;
-    const cardY = card.y + PADDING;
+    const storyboardEl = document.getElementById(`storyboard-${storyboardId}`);
+    if (!storyboardEl) return { x: 0, y: 0 };
+    
+    const shotPanel = storyboardEl.querySelector('.storyboard-shot-panel');
+    if (!shotPanel) return { x: 0, y: 0 };
+    
+    const containerRect = shotPanel.getBoundingClientRect();
+    const rect = cardEl.getBoundingClientRect();
     
     if (type === 'in') {
       return {
-        x: cardX - 8,
-        y: cardY + CARD_HEIGHT / 2,
+        x: (rect.left - containerRect.left) / scale,
+        y: (rect.top - containerRect.top + rect.height / 2) / scale,
       };
     } else {
       return {
-        x: cardX + CARD_WIDTH + 8,
-        y: cardY + CARD_HEIGHT / 2,
+        x: (rect.right - containerRect.left) / scale,
+        y: (rect.top - containerRect.top + rect.height / 2) / scale,
       };
     }
   };
