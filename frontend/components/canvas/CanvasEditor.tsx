@@ -696,6 +696,8 @@ export default function CanvasEditor() {
           onDeleteConnection={handleDeleteConnection}
           onExecuteStoryboard={handleExecuteStoryboard}
           onDownloadStoryboard={handleDownloadStoryboard}
+          onPlay={handleCardPlay}
+          onStop={handleCardStop}
           onModifyCard={handleCardModify}
           onRetryCard={handleCardRetry}
           onSimilarCard={handleCardSimilar}

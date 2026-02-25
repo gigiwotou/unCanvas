@@ -15,6 +15,8 @@ interface InfiniteCanvasProps {
   onDeleteConnection: (storyboardId: string, fromId: string, toId: string) => void;
   onExecuteStoryboard?: (storyboardId: string) => void;
   onDownloadStoryboard?: (storyboardId: string) => void;
+  onPlay?: (playerCardId: string) => void;
+  onStop?: (playerCardId: string) => void;
   onModifyCard?: (cardId: string, instruction: string) => void;
   onRetryCard?: (cardId: string, newPrompt: string) => void;
   onSimilarCard?: (cardId: string) => void;
@@ -43,6 +45,8 @@ export default function InfiniteCanvas({
   onDeleteConnection,
   onExecuteStoryboard,
   onDownloadStoryboard,
+  onPlay,
+  onStop,
   onModifyCard,
   onRetryCard,
   onSimilarCard,
@@ -494,8 +498,8 @@ export default function InfiniteCanvas({
                       {card.type === 'player' ? (
                         <Player
                           card={card}
-                          onPlay={() => {}}
-                          onStop={() => {}}
+                          onPlay={() => onPlay?.(card.id)}
+                          onStop={() => onStop?.(card.id)}
                         />
                       ) : (
                         <div className="w-full h-48 bg-gray-700 flex items-center justify-center">
