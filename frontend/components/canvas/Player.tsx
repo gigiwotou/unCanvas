@@ -60,7 +60,7 @@ export default function Player({ card, onPlay, onStop }: PlayerProps) {
         <img
           src={currentImage}
           alt={`Frame ${currentFrame + 1}`}
-          className="w-full h-full object-contain"
+          className="w-full h-full object-cover"
           draggable={false}
         />
         
