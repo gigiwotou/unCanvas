@@ -469,7 +469,7 @@ export default function InfiniteCanvas({
                       key={card.id}
                       id={`card-${card.id}`}
                       className={`absolute bg-gray-800 rounded-lg shadow-lg overflow-hidden ${
-                        card.type === 'player' ? 'w-[576px] h-[384px]' : 'w-72'
+                        card.type === 'player' ? 'w-[576px] h-[480px]' : 'w-72'
                       }`}
                       style={{ left: card.x + PADDING, top: card.y + PADDING, zIndex: 1 }}
                       onMouseDown={(e) => handleCardMouseDown(e, card, storyboard.id)}
