@@ -5,8 +5,9 @@ export class Ai302Adapter implements ModelAdapter {
   name: string;
   provider: string;
   private apiKey: string;
-  private baseUrl = 'https://api.302.ai/v1';
+  private baseUrl = 'https://api.302.ai';
   private modelName: string;
+  private useGoogle = false;
 
   constructor(id: string, name: string, apiKey: string, modelName: string) {
     this.id = id;
@@ -14,10 +15,17 @@ export class Ai302Adapter implements ModelAdapter {
     this.provider = 'ai302';
     this.apiKey = apiKey;
     this.modelName = modelName || 'gpt-4o';
+    if (modelName?.includes('gemini')) {
+      this.useGoogle = true;
+    }
   }
 
   async generateText(prompt: string, context?: Record<string, any>): Promise<TextGenerationResult> {
-    const url = `${this.baseUrl}/chat/completions`;
+    if (this.useGoogle) {
+      return this.generateGoogleText(prompt, context);
+    }
+    
+    const url = `${this.baseUrl}/v1/chat/completions`;
     
     const messages: any[] = [];
     if (context?.systemPrompt) {
@@ -55,8 +63,50 @@ export class Ai302Adapter implements ModelAdapter {
     return { text, tokens: data.usage?.total_tokens };
   }
 
+  private async generateGoogleText(prompt: string, context?: Record<string, any>): Promise<TextGenerationResult> {
+    const url = `${this.baseUrl}/google/v1/models/${this.modelName}`;
+    
+    const payload: any = {
+      contents: [{ parts: [{ text: prompt }] }],
+    };
+
+    if (context?.systemPrompt) {
+      payload.systemInstruction = { parts: [{ text: context.systemPrompt }] };
+    }
+
+    if (context?.schema) {
+      payload.generationConfig = {
+        responseMimeType: 'application/json',
+        responseSchema: context.schema,
+      };
+    }
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${this.apiKey}`,
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(`302.ai Google API error: ${error}`);
+    }
+
+    const data = await response.json();
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+    return { text, tokens: 0 };
+  }
+
   async generateImage(prompt: string, options?: Record<string, any>): Promise<ImageGenerationResult> {
-    const url = `${this.baseUrl}/images/generations`;
+    if (this.useGoogle) {
+      return this.generateGoogleImage(prompt, options);
+    }
+    
+    const url = `${this.baseUrl}/v1/images/generations`;
     
     const payload = {
       model: this.modelName,
@@ -89,7 +139,48 @@ export class Ai302Adapter implements ModelAdapter {
     return { imageUrl };
   }
 
+  private async generateGoogleImage(prompt: string, options?: Record<string, any>): Promise<ImageGenerationResult> {
+    const url = `${this.baseUrl}/google/v1/models/${this.modelName}`;
+    
+    const payload = {
+      contents: [{ parts: [{ text: prompt }] }],
+      generationConfig: {
+        responseModalities: ['TEXT', 'IMAGE'],
+        imageConfig: {
+          aspectRatio: options?.aspectRatio || '16:9',
+        },
+      },
+    };
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${this.apiKey}`,
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(`302.ai Google Image API error: ${error}`);
+    }
+
+    const data = await response.json();
+    const imagePart = data.candidates?.[0]?.content?.parts?.find((p: any) => p.inlineData);
+    
+    if (!imagePart?.inlineData?.data) {
+      throw new Error('No image returned from 302.ai Google API');
+    }
+
+    const imageUrl = `data:${imagePart.inlineData.mimeType};base64,${imagePart.inlineData.data}`;
+    return { imageUrl };
+  }
+
   async modifyImage(imageUrl: string, instruction: string): Promise<ImageGenerationResult> {
+    if (this.useGoogle) {
+      return this.generateGoogleImage(`${instruction}\n\nOriginal image: ${imageUrl}`);
+    }
     return this.generateImage(`${instruction}\n\nOriginal image: ${imageUrl}`);
   }
 }
