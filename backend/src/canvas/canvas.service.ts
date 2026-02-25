@@ -267,8 +267,11 @@ export class CanvasService {
       return acc;
     }, {} as Record<string, Card[]>);
 
+    const member = await this.workspacesService.getMember(canvas.workspaceId, userId);
+
     return {
       canvas,
+      userRole: member?.role,
       storyboards: storyboards.map(s => ({
         ...s,
         cards: cardsByStoryboard[s.id] || [],

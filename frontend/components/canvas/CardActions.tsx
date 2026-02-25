@@ -12,6 +12,7 @@ interface CardActionsProps {
   onDelete: (cardId: string) => void;
   onPlay: (cardId: string) => void;
   onStop: (cardId: string) => void;
+  canEdit?: boolean;
 }
 
 export default function CardActions({
@@ -22,6 +23,7 @@ export default function CardActions({
   onDelete,
   onPlay,
   onStop,
+  canEdit = true,
 }: CardActionsProps) {
   const [showModify, setShowModify] = useState(false);
   const [showRetry, setShowRetry] = useState(false);
@@ -97,19 +99,22 @@ export default function CardActions({
             <>
               <button
                 onClick={() => setShowModify(true)}
-                className="hover:text-blue-400 transition"
+                disabled={!canEdit}
+                className={`hover:text-blue-400 transition ${!canEdit ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 修改
               </button>
               <button
                 onClick={() => onSimilar(card.id)}
-                className="hover:text-green-400 transition"
+                disabled={!canEdit}
+                className={`hover:text-green-400 transition ${!canEdit ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 相似
               </button>
               <button
                 onClick={() => onDelete(card.id)}
-                className="hover:text-red-400 transition"
+                disabled={!canEdit}
+                className={`hover:text-red-400 transition ${!canEdit ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 删除
               </button>

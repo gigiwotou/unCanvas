@@ -8,9 +8,10 @@ interface PlayerProps {
   card: Card;
   onPlay: () => void;
   onStop: () => void;
+  canEdit?: boolean;
 }
 
-export default function Player({ card, onPlay, onStop }: PlayerProps) {
+export default function Player({ card, onPlay, onStop, canEdit = true }: PlayerProps) {
   const [currentFrame, setCurrentFrame] = useState(card.currentFrame || 0);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const onStopRef = useRef(onStop);
@@ -90,7 +91,8 @@ export default function Player({ card, onPlay, onStop }: PlayerProps) {
                 onPlay();
               }
             }}
-            className="w-10 h-10 bg-blue-600 hover:bg-blue-700 rounded-full flex items-center justify-center text-white transition"
+            disabled={!canEdit}
+            className="w-10 h-10 bg-blue-600 hover:bg-blue-700 rounded-full flex items-center justify-center text-white transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {card.isPlaying ? <FiPause size={20} /> : <FiPlay size={20} />}
           </button>
@@ -99,7 +101,8 @@ export default function Player({ card, onPlay, onStop }: PlayerProps) {
               setCurrentFrame(card.playlist!.length - 1);
               onStop();
             }}
-            className="text-white hover:text-blue-400 transition"
+            disabled={!canEdit}
+            className="text-white hover:text-blue-400 transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <FiSkipForward size={18} />
           </button>
@@ -118,9 +121,10 @@ export default function Player({ card, onPlay, onStop }: PlayerProps) {
               setCurrentFrame(idx);
               onStop();
             }}
+            disabled={!canEdit}
             className={`flex-shrink-0 w-16 h-12 rounded overflow-hidden border-2 transition ${
               idx === currentFrame ? 'border-blue-500' : 'border-transparent opacity-60 hover:opacity-100'
-            }`}
+            } ${!canEdit ? 'pointer-events-none' : ''}`}
           >
             <img src={frame.imageUrl} alt={`Thumb ${idx + 1}`} className="w-full h-full object-cover" draggable={false} />
           </button>

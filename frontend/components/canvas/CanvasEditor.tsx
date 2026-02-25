@@ -36,6 +36,9 @@ export default function CanvasEditor() {
   const [selectedCard, setSelectedCard] = useState<Card | null>(null);
   const [scale, setScale] = useState(1);
   const [imageAspectRatio, setImageAspectRatio] = useState('1:1');
+  const [userRole, setUserRole] = useState<string>('viewer');
+
+  const canEdit = userRole === 'owner' || userRole === 'admin' || userRole === 'editor';
 
   const aspectRatioOptions = [
     { value: '1:1', label: '1:1' },
@@ -59,6 +62,7 @@ export default function CanvasEditor() {
       const { data } = await canvasApi.getFullData(canvasId);
       setCanvas(data.canvas);
       setStoryboards(data.storyboards);
+      setUserRole(data.userRole || 'viewer');
     } catch (err) {
       console.error('Failed to load canvas:', err);
       router.push('/dashboard');
@@ -654,14 +658,15 @@ export default function CanvasEditor() {
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
             placeholder="输入剧本主题，例如'一个侦探故事，分6个镜头'"
-            className="bg-transparent text-white placeholder-gray-400 text-base px-4 h-full flex-1 focus:outline-none"
-            onKeyDown={(e) => e.key === 'Enter' && handleGenerate()}
+            disabled={!canEdit}
+            className="bg-transparent text-white placeholder-gray-400 text-base px-4 h-full flex-1 focus:outline-none disabled:opacity-50"
+            onKeyDown={(e) => e.key === 'Enter' && canEdit && handleGenerate()}
           />
 
           <button
             onClick={handleGenerate}
-            disabled={isGenerating || !prompt.trim() || !textModelId}
-            className={`font-bold h-full px-6 flex-shrink-0 flex items-center transition ${
+            disabled={isGenerating || !prompt.trim() || !textModelId || !canEdit}
+            className={`font-bold h-full px-6 flex-shrink-0 flex items-center transition disabled:opacity-50 disabled:cursor-not-allowed ${
               textModelId 
                 ? 'bg-blue-600 hover:bg-blue-700 text-white' 
                 : 'bg-orange-600 hover:bg-orange-700 text-white'
@@ -717,6 +722,7 @@ export default function CanvasEditor() {
           onModifyCard={handleCardModify}
           onRetryCard={handleCardRetry}
           onSimilarCard={handleCardSimilar}
+          canEdit={canEdit}
           scale={scale}
           onZoomIn={handleZoomIn}
           onZoomOut={handleZoomOut}
@@ -736,6 +742,7 @@ export default function CanvasEditor() {
             onDelete={handleDeleteCard}
             onPlay={handleCardPlay}
             onStop={handleCardStop}
+            canEdit={canEdit}
           />
         </div>
       )}

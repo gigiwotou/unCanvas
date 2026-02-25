@@ -20,6 +20,7 @@ interface InfiniteCanvasProps {
   onModifyCard?: (cardId: string, instruction: string) => void;
   onRetryCard?: (cardId: string, newPrompt: string) => void;
   onSimilarCard?: (cardId: string) => void;
+  canEdit?: boolean;
   scale?: number;
   onZoomIn?: () => void;
   onZoomOut?: () => void;
@@ -50,6 +51,7 @@ export default function InfiniteCanvas({
   onModifyCard,
   onRetryCard,
   onSimilarCard,
+  canEdit = true,
   scale = 1,
   onZoomIn,
   onZoomOut,
@@ -95,6 +97,7 @@ export default function InfiniteCanvas({
   };
 
   const handleCardMouseDown = (e: React.MouseEvent, card: Card, storyboardId: string) => {
+    if (!canEdit) return;
     if ((e.target as HTMLElement).closest('.no-drag')) return;
     if ((e.target as HTMLElement).closest('button')) return;
     if (e.button === 1) {
@@ -230,6 +233,7 @@ export default function InfiniteCanvas({
   }, [handleMouseDown, handleMouseMove, handleMouseUp, handleWheel, handleContextMenu]);
 
   const handleConnectorMouseDown = (e: React.MouseEvent, cardId: string, storyboardId: string) => {
+    if (!canEdit) return;
     e.stopPropagation();
     
     const storyboard = storyboards.find(sb => sb.id === storyboardId);
@@ -253,6 +257,7 @@ export default function InfiniteCanvas({
   };
 
   const handleConnectorMouseUp = (cardId: string, storyboardId: string) => {
+    if (!canEdit) return;
     if (connecting && connecting.from !== cardId) {
       onConnectCards(connecting.from, cardId, storyboardId);
     }
@@ -394,7 +399,8 @@ export default function InfiniteCanvas({
                     e.stopPropagation();
                     onExecuteStoryboard?.(storyboard.id);
                   }}
-                  className="px-3 h-7 flex items-center justify-center rounded-lg bg-purple-600/80 hover:bg-purple-600 text-white text-xs transition"
+                  disabled={!canEdit}
+                  className="px-3 h-7 flex items-center justify-center rounded-lg bg-purple-600/80 hover:bg-purple-600 text-white text-xs transition disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   执行
                 </button>
@@ -416,7 +422,8 @@ export default function InfiniteCanvas({
                     e.stopPropagation();
                     onDeleteStoryboard?.(storyboard.id);
                   }}
-                  className="w-7 h-7 flex items-center justify-center rounded-lg bg-red-600/80 hover:bg-red-600 text-white text-sm transition"
+                  disabled={!canEdit}
+                  className="w-7 h-7 flex items-center justify-center rounded-lg bg-red-600/80 hover:bg-red-600 text-white text-sm transition disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   ×
                 </button>
@@ -426,6 +433,7 @@ export default function InfiniteCanvas({
               className="absolute bottom-0 right-0 w-4 h-4 cursor-se-resize no-drag"
               style={{ zIndex: 10 }}
               onMouseDown={(e) => {
+                if (!canEdit) return;
                 e.stopPropagation();
                 const mouseCanvasX = (e.clientX / scale) - canvasOffset.x;
                 const mouseCanvasY = (e.clientY / scale) - canvasOffset.y;
@@ -524,6 +532,7 @@ export default function InfiniteCanvas({
                           card={card}
                           onPlay={() => onPlay?.(card.id)}
                           onStop={() => onStop?.(card.id)}
+                          canEdit={canEdit}
                         />
                       ) : (
                         <div className="w-full h-48 bg-gray-700 flex items-center justify-center">
