@@ -239,7 +239,7 @@ export default function InfiniteCanvas({
 
   const getConnectorPosition = (card: Card, type: 'in' | 'out', storyboardId: string) => {
     const CARD_WIDTH = 288;
-    const CARD_IMAGE_HEIGHT = 192;
+    const CARD_HEIGHT = 252;
     
     const cardX = card.x + PADDING;
     const cardY = card.y + PADDING;
@@ -247,12 +247,12 @@ export default function InfiniteCanvas({
     if (type === 'in') {
       return {
         x: cardX - 8,
-        y: cardY + CARD_IMAGE_HEIGHT / 2,
+        y: cardY + CARD_HEIGHT / 2,
       };
     } else {
       return {
         x: cardX + CARD_WIDTH + 8,
-        y: cardY + CARD_IMAGE_HEIGHT / 2,
+        y: cardY + CARD_HEIGHT / 2,
       };
     }
   };
