@@ -493,6 +493,8 @@ export default function InfiniteCanvas({
                       <div className="w-full h-48 bg-gray-700 flex items-center justify-center">
                         {card.isLoading ? (
                           <div className="w-10 h-10 border-4 border-gray-600 border-t-blue-500 rounded-full animate-spin" />
+                        ) : card.thumbnailUrl ? (
+                          <img src={card.thumbnailUrl} alt={card.title} className="w-full h-full object-cover" draggable={false} />
                         ) : card.imageUrl ? (
                           <img src={card.imageUrl} alt={card.title} className="w-full h-full object-cover" draggable={false} />
                         ) : (
