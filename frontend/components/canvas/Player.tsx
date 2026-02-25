@@ -13,6 +13,8 @@ interface PlayerProps {
 export default function Player({ card, onPlay, onStop }: PlayerProps) {
   const [currentFrame, setCurrentFrame] = useState(card.currentFrame || 0);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const onStopRef = useRef(onStop);
+  onStopRef.current = onStop;
 
   useEffect(() => {
     setCurrentFrame(card.currentFrame || 0);
@@ -24,8 +26,7 @@ export default function Player({ card, onPlay, onStop }: PlayerProps) {
         setCurrentFrame((prev) => {
           const next = prev + 1;
           if (next >= card.playlist!.length) {
-            onStop();
-            return 0;
+            return -1;
           }
           return next;
         });
@@ -42,7 +43,14 @@ export default function Player({ card, onPlay, onStop }: PlayerProps) {
         clearInterval(intervalRef.current);
       }
     };
-  }, [card.isPlaying, card.playlist, onStop]);
+  }, [card.isPlaying, card.playlist]);
+
+  useEffect(() => {
+    if (currentFrame === -1) {
+      setCurrentFrame(0);
+      onStopRef.current();
+    }
+  }, [currentFrame]);
 
   const currentImage = card.playlist?.[currentFrame]?.imageUrl || card.thumbnailUrl;
 
