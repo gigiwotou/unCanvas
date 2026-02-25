@@ -12,6 +12,8 @@ interface InfiniteCanvasProps {
   onDeleteCard: (cardId: string) => void;
   onConnectCards: (fromId: string, toId: string, storyboardId: string) => void;
   onDeleteConnection: (storyboardId: string, fromId: string, toId: string) => void;
+  onExecuteStoryboard?: (storyboardId: string) => void;
+  onDownloadStoryboard?: (storyboardId: string) => void;
   onModifyCard?: (cardId: string, instruction: string) => void;
   onRetryCard?: (cardId: string, newPrompt: string) => void;
   onSimilarCard?: (cardId: string) => void;
@@ -38,6 +40,8 @@ export default function InfiniteCanvas({
   onDeleteCard,
   onConnectCards,
   onDeleteConnection,
+  onExecuteStoryboard,
+  onDownloadStoryboard,
   onModifyCard,
   onRetryCard,
   onSimilarCard,
@@ -353,17 +357,41 @@ export default function InfiniteCanvas({
           >
             <div className="bg-gray-900/70 p-3 flex justify-between items-center flex-shrink-0 cursor-move no-drag">
               <h2 className="font-bold text-white truncate flex-1">{storyboard.title}</h2>
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  onDeleteStoryboard?.(storyboard.id);
-                }}
-                className="w-7 h-7 flex items-center justify-center rounded-lg bg-red-600/80 hover:bg-red-600 text-white text-sm transition"
-              >
-                ×
-              </button>
+              <div className="flex items-center space-x-2">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onExecuteStoryboard?.(storyboard.id);
+                  }}
+                  className="px-3 h-7 flex items-center justify-center rounded-lg bg-purple-600/80 hover:bg-purple-600 text-white text-xs transition"
+                >
+                  执行
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onDownloadStoryboard?.(storyboard.id);
+                  }}
+                  className="w-7 h-7 flex items-center justify-center rounded-lg bg-green-600/80 hover:bg-green-600 text-white text-xs transition"
+                >
+                  ↓
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onDeleteStoryboard?.(storyboard.id);
+                  }}
+                  className="w-7 h-7 flex items-center justify-center rounded-lg bg-red-600/80 hover:bg-red-600 text-white text-sm transition"
+                >
+                  ×
+                </button>
+              </div>
             </div>
             <div
               className="absolute bottom-0 right-0 w-4 h-4 cursor-se-resize no-drag"

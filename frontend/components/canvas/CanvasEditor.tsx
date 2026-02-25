@@ -263,6 +263,83 @@ export default function CanvasEditor() {
     }
   };
 
+  const handleExecuteStoryboard = async (storyboardId: string) => {
+    const storyboard = storyboards.find(sb => sb.id === storyboardId);
+    if (!storyboard) return;
+
+    const playerCard = storyboard.cards.find(c => c.type === 'player');
+    if (!playerCard) {
+      alert('该故事板没有播放器');
+      return;
+    }
+
+    const playlist: Card[] = [];
+    let currentNodeId = playerCard.id;
+
+    while (currentNodeId !== undefined) {
+      const incomingConnection = storyboard.connections.find(c => c.to === currentNodeId);
+      if (!incomingConnection) break;
+
+      const fromCard = storyboard.cards.find(c => c.id === incomingConnection.from);
+      if (fromCard && fromCard.type === 'image' && fromCard.imageUrl) {
+        playlist.unshift(fromCard);
+      }
+      currentNodeId = incomingConnection.from;
+    }
+
+    if (playlist.length > 0) {
+      await canvasApi.updateCard(playerCard.id, {
+        isReady: true,
+        playlist: playlist,
+        thumbnailUrl: playlist[0].imageUrl,
+      });
+      loadCanvas();
+    } else {
+      alert('没有可播放的图片，请先连接图片到播放器');
+    }
+  };
+
+  const handleDownloadStoryboard = async (storyboardId: string) => {
+    const storyboard = storyboards.find(sb => sb.id === storyboardId);
+    if (!storyboard) return;
+
+    const imageCards = storyboard.cards.filter(c => c.type === 'image' && c.imageUrl);
+    if (imageCards.length === 0) {
+      alert('没有可下载的图片');
+      return;
+    }
+
+    const JSZip = (await import('jszip')).default;
+    const zip = new JSZip();
+
+    if (storyboard.scriptText) {
+      zip.file('script.txt', storyboard.scriptText);
+    }
+
+    for (let i = 0; i < imageCards.length; i++) {
+      const card = imageCards[i];
+      if (!card.imageUrl) continue;
+      try {
+        const response = await fetch(card.imageUrl);
+        const blob = await response.blob();
+        zip.file(`shot-${i + 1}.png`, blob);
+
+        const promptText = `Title: ${card.title || 'Untitled'}\n\nCamera: ${card.cameraMovement || 'N/A'}\n\nPrompt: ${card.description || 'N/A'}`;
+        zip.file(`shot-${i + 1}-prompt.txt`, promptText);
+      } catch (err) {
+        console.error(`Failed to download shot ${i + 1}:`, err);
+      }
+    }
+
+    const content = await zip.generateAsync({ type: 'blob' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(content);
+    const fileName = (storyboard.title || 'storyboard').replace(/[^a-z0-9]/gi, '_').toLowerCase();
+    link.download = `scene_${fileName}.zip`;
+    link.click();
+    URL.revokeObjectURL(link.href);
+  };
+
   const handleConnectCards = async (fromId: string, toId: string, storyboardId: string) => {
     const storyboard = storyboards.find(sb => sb.id === storyboardId);
     if (!storyboard) return;
@@ -616,6 +693,8 @@ export default function CanvasEditor() {
           onDeleteCard={handleDeleteCard}
           onConnectCards={handleConnectCards}
           onDeleteConnection={handleDeleteConnection}
+          onExecuteStoryboard={handleExecuteStoryboard}
+          onDownloadStoryboard={handleDownloadStoryboard}
           onModifyCard={handleCardModify}
           onRetryCard={handleCardRetry}
           onSimilarCard={handleCardSimilar}
