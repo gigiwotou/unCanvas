@@ -105,6 +105,8 @@ export default function InfiniteCanvas({
       return;
     }
     e.stopPropagation();
+    const cardEl = document.getElementById(`card-${card.id}`);
+    if (cardEl) cardEl.classList.add('dragging');
     const mouseCanvasX = (e.clientX / scale) - canvasOffset.x;
     const mouseCanvasY = (e.clientY / scale) - canvasOffset.y;
     setDraggingCard(card.id);
@@ -174,13 +176,17 @@ export default function InfiniteCanvas({
   }, [isPanning, panStart, draggingStoryboard, draggingCard, dragOffset, canvasOffset, connecting, storyboards, onUpdateStoryboard, onUpdateCard, scale]);
 
   const handleMouseUp = useCallback(() => {
+    if (draggingCard) {
+      const cardEl = document.getElementById(`card-${draggingCard}`);
+      if (cardEl) cardEl.classList.remove('dragging');
+    }
     setDraggingStoryboard(null);
     setDraggingCard(null);
     setConnecting(null);
     setTempConnection(null);
     setIsPanning(false);
     setResizingStoryboard(null);
-  }, []);
+  }, [draggingCard]);
 
   const handleMouseDown = useCallback((e: MouseEvent) => {
     if (e.button === 1) {

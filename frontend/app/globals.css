@@ -24,3 +24,7 @@ body {
     stroke-dashoffset: -16;
   }
 }
+
+.dragging {
+  transition: none !important;
+}
