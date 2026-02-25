@@ -4,10 +4,11 @@ import { CanvasService } from './canvas.service';
 import { CanvasController } from './canvas.controller';
 import { Canvas, Storyboard, Card } from './canvas.entity';
 import { WorkspacesModule } from '../workspaces/workspaces.module';
+import { WorkspaceMember } from '../workspaces/workspace.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Canvas, Storyboard, Card]),
+    TypeOrmModule.forFeature([Canvas, Storyboard, Card, WorkspaceMember]),
     WorkspacesModule,
   ],
   controllers: [CanvasController],
