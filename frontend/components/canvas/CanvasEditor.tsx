@@ -380,18 +380,31 @@ export default function CanvasEditor() {
     const card = storyboards.flatMap(sb => sb.cards).find(c => c.id === cardId);
     if (!card || !imageModelId) return;
 
-    await handleUpdateCard(cardId, { isLoading: true });
+    const storyboard = storyboards.find(sb => sb.id === card.storyboardId);
+    if (!storyboard) return;
+
     try {
+      const { data: newCard } = await canvasApi.createCard({
+        storyboardId: storyboard.id,
+        type: 'image',
+        x: card.x,
+        y: card.y + 350,
+        title: `修改于: ${card.title}`,
+        description: `${card.description}\n(修改指令: ${instruction})`,
+        cameraMovement: card.cameraMovement,
+        aspectRatio: card.aspectRatio || '16:9',
+      });
+
       const { data } = await modelsApi.modifyImage({
         imageUrl: card.imageUrl || '',
         instruction,
         modelConfigId: imageModelId,
       });
-      await handleUpdateCard(cardId, { imageUrl: data.imageUrl, isLoading: false });
+
+      await canvasApi.updateCard(newCard.id, { imageUrl: data.imageUrl });
       loadCanvas();
     } catch (err) {
       console.error('Failed to modify image:', err);
-      await handleUpdateCard(cardId, { isLoading: false });
     }
   };
 
