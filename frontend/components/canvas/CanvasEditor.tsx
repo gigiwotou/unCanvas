@@ -432,10 +432,17 @@ export default function CanvasEditor() {
       title: `相似: ${card.title}`,
       description: card.description,
       cameraMovement: card.cameraMovement,
+      isLoading: true,
     });
 
-    await generateCardImage(newCard.id, card.description || '', imageModelId, imageAspectRatio);
     loadCanvas();
+
+    try {
+      await generateCardImage(newCard.id, card.description || '', imageModelId, imageAspectRatio);
+      loadCanvas();
+    } catch (err) {
+      console.error('Failed to generate similar image:', err);
+    }
   };
 
   const handleCardPlay = async (cardId: string) => {
