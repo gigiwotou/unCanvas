@@ -4,6 +4,7 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { Storyboard, Card } from '@/types';
 import { FiTrash2 } from 'react-icons/fi';
 import CardActions from './CardActions';
+import Player from './Player';
 
 interface InfiniteCanvasProps {
   storyboards: Storyboard[];
@@ -490,17 +491,25 @@ export default function InfiniteCanvas({
                         />
                       )}
 
-                      <div className="w-full h-48 bg-gray-700 flex items-center justify-center">
-                        {card.isLoading ? (
-                          <div className="w-10 h-10 border-4 border-gray-600 border-t-blue-500 rounded-full animate-spin" />
-                        ) : card.thumbnailUrl ? (
-                          <img src={card.thumbnailUrl} alt={card.title} className="w-full h-full object-cover" draggable={false} />
-                        ) : card.imageUrl ? (
-                          <img src={card.imageUrl} alt={card.title} className="w-full h-full object-cover" draggable={false} />
-                        ) : (
-                          <span className="text-gray-500">未生成</span>
-                        )}
-                      </div>
+                      {card.type === 'player' ? (
+                        <Player
+                          card={card}
+                          onPlay={() => {}}
+                          onStop={() => {}}
+                        />
+                      ) : (
+                        <div className="w-full h-48 bg-gray-700 flex items-center justify-center">
+                          {card.isLoading ? (
+                            <div className="w-10 h-10 border-4 border-gray-600 border-t-blue-500 rounded-full animate-spin" />
+                          ) : card.thumbnailUrl ? (
+                            <img src={card.thumbnailUrl} alt={card.title} className="w-full h-full object-cover" draggable={false} />
+                          ) : card.imageUrl ? (
+                            <img src={card.imageUrl} alt={card.title} className="w-full h-full object-cover" draggable={false} />
+                          ) : (
+                            <span className="text-gray-500">未生成</span>
+                          )}
+                        </div>
+                      )}
                       <div className="p-3 bg-gray-900/50">
                         <div className="flex justify-between items-start">
                           <div className="flex-1">
