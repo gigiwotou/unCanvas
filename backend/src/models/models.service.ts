@@ -24,7 +24,7 @@ export class ModelsService {
   }
 
   async findAllConfigs(): Promise<ModelConfig[]> {
-    return this.configRepository.find({ where: { enabled: true } });
+    return this.configRepository.find();
   }
 
   async findConfig(id: string): Promise<ModelConfig> {
