@@ -246,12 +246,12 @@ export default function InfiniteCanvas({
     
     if (type === 'in') {
       return {
-        x: cardX,
+        x: cardX - 8,
         y: cardY + CARD_IMAGE_HEIGHT / 2,
       };
     } else {
       return {
-        x: cardX + CARD_WIDTH,
+        x: cardX + CARD_WIDTH + 8,
         y: cardY + CARD_IMAGE_HEIGHT / 2,
       };
     }
