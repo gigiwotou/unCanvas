@@ -33,13 +33,12 @@ export default function CardActions({
 
   const handleModify = async () => {
     if (!modifyPrompt.trim()) return;
-    setLoading(true);
+    setShowModify(false);
+    setModifyPrompt('');
     try {
       await onModify(card.id, modifyPrompt);
-      setShowModify(false);
-      setModifyPrompt('');
-    } finally {
-      setLoading(false);
+    } catch (err) {
+      console.error('Modify failed:', err);
     }
   };
 
@@ -132,10 +131,10 @@ export default function CardActions({
           <div className="flex space-x-2">
             <button
               onClick={handleModify}
-              disabled={loading || !modifyPrompt.trim()}
+              disabled={!modifyPrompt.trim()}
               className="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-xs px-2 py-1 rounded transition disabled:opacity-50"
             >
-              {loading ? '处理中...' : '确认'}
+              确认
             </button>
             <button
               onClick={() => setShowModify(false)}
