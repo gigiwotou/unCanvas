@@ -80,6 +80,7 @@ export interface ModelConfig {
   apiUrl?: string;
   modelName?: string;
   enabled: boolean;
+  type: 'text' | 'image';
 }
 
 export interface StoryboardGenerationResult {

@@ -27,7 +27,8 @@ export default function CanvasEditor() {
   const { viewport, setViewport, isGenerating, setIsGenerating } = useUIStore();
   
   const [modelConfigs, setModelConfigs] = useState<ModelConfig[]>([]);
-  const [selectedModelId, setSelectedModelId] = useState<string>('');
+  const [textModelId, setTextModelId] = useState<string>('');
+  const [imageModelId, setImageModelId] = useState<string>('');
   const [prompt, setPrompt] = useState('');
   const [characterImage, setCharacterImage] = useState<string | null>(null);
   const [sceneImage, setSceneImage] = useState<string | null>(null);
@@ -59,8 +60,13 @@ export default function CanvasEditor() {
     try {
       const { data } = await modelsApi.findAllConfigs();
       setModelConfigs(data);
-      if (data.length > 0) {
-        setSelectedModelId(data[0].id);
+      const textModels = data.filter((m: ModelConfig) => m.enabled && m.type === 'text');
+      const imageModels = data.filter((m: ModelConfig) => m.enabled && m.type === 'image');
+      if (textModels.length > 0) {
+        setTextModelId(textModels[0].id);
+      }
+      if (imageModels.length > 0) {
+        setImageModelId(imageModels[0].id);
       }
     } catch (err) {
       console.error('Failed to load model configs:', err);
@@ -80,13 +86,13 @@ export default function CanvasEditor() {
   };
 
   const handleGenerate = async () => {
-    if (!prompt.trim() || !selectedModelId) return;
+    if (!prompt.trim() || !textModelId) return;
 
     setIsGenerating(true);
     try {
       const { data } = await modelsApi.generateStoryboard({
         prompt,
-        modelConfigId: selectedModelId,
+        modelConfigId: textModelId,
         characterImage: characterImage || undefined,
         sceneImage: sceneImage || undefined,
       });
@@ -167,7 +173,7 @@ export default function CanvasEditor() {
     });
 
     for (const card of cardsToCreate) {
-      generateCardImage(card.id, card.description, selectedModelId);
+      generateCardImage(card.id, card.description, imageModelId);
     }
   };
 
@@ -284,14 +290,14 @@ export default function CanvasEditor() {
 
   const handleCardModify = async (cardId: string, instruction: string) => {
     const card = storyboards.flatMap(sb => sb.cards).find(c => c.id === cardId);
-    if (!card || !selectedModelId) return;
+    if (!card || !imageModelId) return;
 
     await handleUpdateCard(cardId, { isLoading: true });
     try {
       const { data } = await modelsApi.modifyImage({
         imageUrl: card.imageUrl || '',
         instruction,
-        modelConfigId: selectedModelId,
+        modelConfigId: imageModelId,
       });
       await handleUpdateCard(cardId, { imageUrl: data.imageUrl, isLoading: false });
       loadCanvas();
@@ -303,12 +309,12 @@ export default function CanvasEditor() {
 
   const handleCardRetry = async (cardId: string, newPrompt: string) => {
     await handleUpdateCard(cardId, { isLoading: true, description: newPrompt });
-    await generateCardImage(cardId, newPrompt, selectedModelId);
+    await generateCardImage(cardId, newPrompt, imageModelId);
   };
 
   const handleCardSimilar = async (cardId: string) => {
     const card = storyboards.flatMap(sb => sb.cards).find(c => c.id === cardId);
-    if (!card || !selectedModelId) return;
+    if (!card || !imageModelId) return;
 
     const { data: newCard } = await canvasApi.createCard({
       storyboardId: card.storyboardId,
@@ -320,7 +326,7 @@ export default function CanvasEditor() {
       cameraMovement: card.cameraMovement,
     });
 
-    await generateCardImage(newCard.id, card.description || '', selectedModelId);
+    await generateCardImage(newCard.id, card.description || '', imageModelId);
     loadCanvas();
   };
 
@@ -404,33 +410,60 @@ export default function CanvasEditor() {
           <h1 className="font-semibold">{canvas?.title || '无限画布'}</h1>
         </div>
         <div className="flex items-center space-x-2">
+          <span className="text-gray-400 text-xs">文本:</span>
           <button
             onClick={() => setShowModelSelect(!showModelSelect)}
             className="bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded-lg text-sm transition"
           >
-            {modelConfigs.find(m => m.id === selectedModelId)?.name || '选择模型'}
+            {modelConfigs.find(m => m.id === textModelId)?.name || '选择模型'}
+          </button>
+          <span className="text-gray-400 text-xs">图像:</span>
+          <button
+            onClick={() => setShowModelSelect(!showModelSelect)}
+            className="bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded-lg text-sm transition"
+          >
+            {modelConfigs.find(m => m.id === imageModelId)?.name || '选择模型'}
           </button>
         </div>
       </header>
 
       {showModelSelect && (
-        <div className="fixed top-12 right-4 z-50 bg-gray-800 rounded-lg shadow-xl border border-gray-700 p-2">
-          {modelConfigs.map(config => (
+        <div className="fixed top-12 right-4 z-50 bg-gray-800 rounded-lg shadow-xl border border-gray-700 p-2 w-64">
+          <div className="text-xs text-gray-400 px-2 py-1 border-b border-gray-700">文本模型</div>
+          {modelConfigs.filter(m => m.type === 'text').map(config => (
             <button
               key={config.id}
               onClick={() => {
-                setSelectedModelId(config.id);
+                setTextModelId(config.id);
                 setShowModelSelect(false);
               }}
               className={`w-full text-left px-4 py-2 rounded-lg text-sm transition ${
-                config.id === selectedModelId ? 'bg-blue-600' : 'hover:bg-gray-700'
+                config.id === textModelId ? 'bg-blue-600' : 'hover:bg-gray-700'
               }`}
             >
               {config.name}
             </button>
           ))}
-          {modelConfigs.length === 0 && (
-            <p className="px-4 py-2 text-gray-500 text-sm">暂无可用模型</p>
+          {modelConfigs.filter(m => m.type === 'text').length === 0 && (
+            <p className="px-4 py-2 text-gray-500 text-sm">暂无可用文本模型</p>
+          )}
+          <div className="text-xs text-gray-400 px-2 py-1 border-t border-gray-700 mt-2">图像模型</div>
+          {modelConfigs.filter(m => m.type === 'image').map(config => (
+            <button
+              key={config.id}
+              onClick={() => {
+                setImageModelId(config.id);
+                setShowModelSelect(false);
+              }}
+              className={`w-full text-left px-4 py-2 rounded-lg text-sm transition ${
+                config.id === imageModelId ? 'bg-green-600' : 'hover:bg-gray-700'
+              }`}
+            >
+              {config.name}
+            </button>
+          ))}
+          {modelConfigs.filter(m => m.type === 'image').length === 0 && (
+            <p className="px-4 py-2 text-gray-500 text-sm">暂无可用图像模型</p>
           )}
         </div>
       )}
@@ -511,9 +544,9 @@ export default function CanvasEditor() {
 
           <button
             onClick={handleGenerate}
-            disabled={isGenerating || !prompt.trim() || !selectedModelId}
+            disabled={isGenerating || !prompt.trim() || !textModelId}
             className={`font-bold h-full px-6 flex-shrink-0 flex items-center transition ${
-              selectedModelId 
+              textModelId 
                 ? 'bg-blue-600 hover:bg-blue-700 text-white' 
                 : 'bg-orange-600 hover:bg-orange-700 text-white'
             }`}
@@ -524,7 +557,7 @@ export default function CanvasEditor() {
                 <span>思考中...</span>
               </>
             ) : (
-              <span>{selectedModelId ? '生成' : '请先配置模型'}</span>
+              <span>{textModelId ? '生成' : '请先配置文本模型'}</span>
             )}
           </button>
         </div>

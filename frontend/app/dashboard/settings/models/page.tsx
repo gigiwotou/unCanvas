@@ -16,11 +16,12 @@ export default function ModelSettingsPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     name: '',
-    provider: 'gemini' as 'gemini' | 'openai' | 'ai302',
+    provider: 'gemini' as 'gemini' | 'openai' | 'ai302' | 'anthropic' | 'vertex',
     apiKey: '',
     apiUrl: '',
     modelName: '',
     enabled: true,
+    type: 'text' as 'text' | 'image',
   });
 
   useEffect(() => {
@@ -55,6 +56,7 @@ export default function ModelSettingsPage() {
           apiUrl: formData.apiUrl || undefined,
           modelName: formData.modelName || undefined,
           enabled: formData.enabled,
+          type: formData.type,
         });
       } else {
         await modelsApi.createConfig(formData);
@@ -69,6 +71,7 @@ export default function ModelSettingsPage() {
         apiUrl: '',
         modelName: '',
         enabled: true,
+        type: 'text',
       });
       loadConfigs();
     } catch (err) {
@@ -86,6 +89,7 @@ export default function ModelSettingsPage() {
       apiUrl: config.apiUrl || '',
       modelName: config.modelName || '',
       enabled: config.enabled,
+      type: config.type || 'text',
     });
     setShowAdd(true);
   };
@@ -139,6 +143,7 @@ export default function ModelSettingsPage() {
               apiUrl: '',
               modelName: '',
               enabled: true,
+              type: 'text',
             });
             setShowAdd(true);
           }}
@@ -170,6 +175,7 @@ export default function ModelSettingsPage() {
                     <div>
                       <p className="font-medium">{config.name}</p>
                       <p className="text-gray-400 text-sm">
+                        {config.type === 'image' ? '🖼️ ' : '📝 '}
                         {providerOptions[config.provider as keyof typeof providerOptions]?.name || config.provider}
                         {config.modelName && ` - ${config.modelName}`}
                       </p>
@@ -272,6 +278,18 @@ export default function ModelSettingsPage() {
                   />
                 </div>
               )}
+
+              <div>
+                <label className="block text-gray-400 mb-2">模型类型</label>
+                <select
+                  value={formData.type}
+                  onChange={(e) => setFormData({ ...formData, type: e.target.value as 'text' | 'image' })}
+                  className="w-full bg-gray-700 text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="text">文本生成模型</option>
+                  <option value="image">图像生成模型</option>
+                </select>
+              </div>
 
               <div>
                 <label className="block text-gray-400 mb-2">模型名称（可选）</label>

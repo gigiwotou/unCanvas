@@ -2,7 +2,7 @@ import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request }
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { ModelsService } from './models.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { ModelProvider } from './model-config.entity';
+import { ModelProvider, ModelType } from './model-config.entity';
 import { IsString, IsEnum, IsOptional, IsBoolean, IsObject } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
@@ -28,6 +28,11 @@ class CreateModelConfigDto {
   @IsOptional()
   @IsString()
   modelName?: string;
+
+  @ApiPropertyOptional({ enum: ModelType })
+  @IsOptional()
+  @IsEnum(ModelType)
+  type?: ModelType;
 
   @ApiPropertyOptional()
   @IsOptional()
@@ -55,6 +60,11 @@ class UpdateModelConfigDto {
   @IsOptional()
   @IsString()
   modelName?: string;
+
+  @ApiPropertyOptional({ enum: ModelType })
+  @IsOptional()
+  @IsEnum(ModelType)
+  type?: ModelType;
 
   @ApiPropertyOptional()
   @IsOptional()
