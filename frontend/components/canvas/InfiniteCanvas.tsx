@@ -241,6 +241,9 @@ export default function InfiniteCanvas({
     const cardEl = document.getElementById(`card-${card.id}`);
     if (!cardEl) return { x: 0, y: 0 };
     
+    const dot = cardEl.querySelector(`[data-connector-type="${type}"]`);
+    if (!dot) return { x: 0, y: 0 };
+    
     const storyboardEl = document.getElementById(`storyboard-${storyboardId}`);
     if (!storyboardEl) return { x: 0, y: 0 };
     
@@ -248,19 +251,12 @@ export default function InfiniteCanvas({
     if (!shotPanel) return { x: 0, y: 0 };
     
     const containerRect = shotPanel.getBoundingClientRect();
-    const rect = cardEl.getBoundingClientRect();
+    const dotRect = dot.getBoundingClientRect();
     
-    if (type === 'in') {
-      return {
-        x: (rect.left - containerRect.left) / scale,
-        y: (rect.top - containerRect.top + rect.height / 2) / scale,
-      };
-    } else {
-      return {
-        x: (rect.right - containerRect.left) / scale,
-        y: (rect.top - containerRect.top + rect.height / 2) / scale,
-      };
-    }
+    return {
+      x: (dotRect.left - containerRect.left) / scale + (dotRect.width / 2 / scale),
+      y: (dotRect.top - containerRect.top) / scale + (dotRect.height / 2 / scale),
+    };
   };
 
   const renderConnections = (storyboard: Storyboard) => {
