@@ -466,7 +466,7 @@ export default function InfiniteCanvas({
                         {card.isLoading ? (
                           <div className="w-10 h-10 border-4 border-gray-600 border-t-blue-500 rounded-full animate-spin" />
                         ) : card.imageUrl ? (
-                          <img src={card.imageUrl} alt={card.title} className="w-full h-full object-cover" />
+                          <img src={card.imageUrl} alt={card.title} className="w-full h-full object-cover" draggable={false} />
                         ) : (
                           <span className="text-gray-500">未生成</span>
                         )}
