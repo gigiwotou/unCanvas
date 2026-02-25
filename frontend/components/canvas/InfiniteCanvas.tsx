@@ -438,17 +438,17 @@ export default function InfiniteCanvas({
                     >
                       {card.type === 'image' && (
                         <>
-                          <div className="absolute -left-2 top-1/2 -translate-y-1/2 w-4 h-4 bg-gray-500 rounded-full border-2 border-gray-800 z-10 cursor-crosshair"
+                          <div data-connector-type="in" className="absolute -left-2 top-1/2 -translate-y-1/2 w-4 h-4 bg-gray-500 rounded-full border-2 border-gray-800 z-10 cursor-crosshair"
                             onMouseUp={() => handleConnectorMouseUp(card.id, storyboard.id)}
                           />
-                          <div className="absolute -right-2 top-1/2 -translate-y-1/2 w-4 h-4 bg-gray-500 rounded-full border-2 border-gray-800 z-10 cursor-crosshair"
+                          <div data-connector-type="out" className="absolute -right-2 top-1/2 -translate-y-1/2 w-4 h-4 bg-gray-500 rounded-full border-2 border-gray-800 z-10 cursor-crosshair"
                             onMouseDown={(e) => handleConnectorMouseDown(e, card.id, storyboard.id)}
                           />
                         </>
                       )}
                       
                       {card.type === 'player' && (
-                        <div className="absolute -left-2 top-1/2 -translate-y-1/2 w-4 h-4 bg-gray-500 rounded-full border-2 border-gray-800 z-10"
+                        <div data-connector-type="in" className="absolute -left-2 top-1/2 -translate-y-1/2 w-4 h-4 bg-gray-500 rounded-full border-2 border-gray-800 z-10"
                           onMouseUp={() => handleConnectorMouseUp(card.id, storyboard.id)}
                         />
                       )}
