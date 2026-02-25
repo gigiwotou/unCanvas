@@ -288,9 +288,10 @@ export default function CanvasEditor() {
     }
 
     if (playlist.length > 0) {
+      const simplePlaylist = playlist.map(c => ({ id: c.id, imageUrl: c.imageUrl }));
       await canvasApi.updateCard(playerCard.id, {
         isReady: true,
-        playlist: playlist,
+        playlist: simplePlaylist,
         thumbnailUrl: playlist[0].imageUrl,
       });
       loadCanvas();
