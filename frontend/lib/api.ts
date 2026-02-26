@@ -53,6 +53,8 @@ export const workspacesApi = {
   getMembers: (id: string) => api.get(`/workspaces/${id}/members`),
   addMember: (id: string, data: any) => api.post(`/workspaces/${id}/members`, data),
   removeMember: (id: string, userId: string) => api.delete(`/workspaces/${id}/members/${userId}`),
+  updateMemberRole: (id: string, userId: string, data: any) => 
+    api.patch(`/workspaces/${id}/members/${userId}`, data),
 };
 
 export const canvasApi = {

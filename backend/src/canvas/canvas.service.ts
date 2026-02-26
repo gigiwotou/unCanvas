@@ -5,6 +5,7 @@ import { Canvas, Storyboard, Card } from './canvas.entity';
 import { CreateCanvasDto, UpdateCanvasDto, CreateStoryboardDto, UpdateStoryboardDto, CreateCardDto, UpdateCardDto } from './dto/canvas.dto';
 import { WorkspacesService } from '../workspaces/workspaces.service';
 import { WorkspaceRole, WorkspaceMember } from '../workspaces/workspace.entity';
+import { UploadService } from '../common/upload.service';
 
 @Injectable()
 export class CanvasService {
@@ -18,7 +19,19 @@ export class CanvasService {
     @InjectRepository(WorkspaceMember)
     private membersRepository: Repository<WorkspaceMember>,
     private workspacesService: WorkspacesService,
+    private uploadService: UploadService,
   ) {}
+
+  private async processReferenceImages(dto: any) {
+    if (dto.characterReferenceImage?.startsWith('data:')) {
+      const result = await this.uploadService.uploadBase64Image(dto.characterReferenceImage, 'character');
+      dto.characterReferenceImage = result.url;
+    }
+    if (dto.sceneReferenceImage?.startsWith('data:')) {
+      const result = await this.uploadService.uploadBase64Image(dto.sceneReferenceImage, 'scene');
+      dto.sceneReferenceImage = result.url;
+    }
+  }
 
   async create(createCanvasDto: CreateCanvasDto, workspaceId: string, userId: string): Promise<Canvas> {
     const hasAccess = await this.workspacesService.checkAccess(
@@ -109,6 +122,8 @@ export class CanvasService {
       throw new ForbiddenException('无权限添加分镜');
     }
 
+    await this.processReferenceImages(dto);
+
     const storyboard = this.storyboardRepository.create({
       ...dto,
       connections: [],
@@ -141,6 +156,8 @@ export class CanvasService {
     if (!hasAccess) {
       throw new ForbiddenException('无权限修改分镜');
     }
+
+    await this.processReferenceImages(dto);
 
     Object.assign(storyboard, dto);
     return this.storyboardRepository.save(storyboard);

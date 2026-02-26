@@ -76,8 +76,21 @@ export class ModelsService {
     return adapter;
   }
 
-  async generateStoryboard(prompt: string, configId: string, characterImage?: string, sceneImage?: string): Promise<StoryboardGenerationResult> {
+  async generateStoryboard(prompt: string, configId: string, characterImage?: string, sceneImage?: string): Promise<StoryboardGenerationResult & { characterImageUrl?: string; sceneImageUrl?: string }> {
     const adapter = this.getAdapter(configId);
+    
+    let characterImageUrl = characterImage;
+    let sceneImageUrl = sceneImage;
+
+    if (characterImage?.startsWith('data:')) {
+      const uploadResult = await this.uploadService.uploadBase64Image(characterImage, 'character');
+      characterImageUrl = uploadResult.url;
+    }
+
+    if (sceneImage?.startsWith('data:')) {
+      const uploadResult = await this.uploadService.uploadBase64Image(sceneImage, 'scene');
+      sceneImageUrl = uploadResult.url;
+    }
     
     const systemPrompt = `You are a world-class film director's assistant. Your task is to interpret a user's script idea, break it down into a series of distinct storyboard shots, and then weave those shots into a cohesive script.
     - Analyze the user's prompt to determine the number of shots.
@@ -111,7 +124,12 @@ export class ModelsService {
     });
 
     try {
-      return JSON.parse(result.text);
+      const storyboard = JSON.parse(result.text);
+      return {
+        ...storyboard,
+        characterImageUrl,
+        sceneImageUrl,
+      };
     } catch (e) {
       throw new Error('Failed to parse storyboard response');
     }
