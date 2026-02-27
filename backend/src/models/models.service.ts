@@ -91,12 +91,19 @@ export class ModelsService {
       const uploadResult = await this.uploadService.uploadBase64Image(sceneImage, 'scene');
       sceneImageUrl = uploadResult.url;
     }
-    
-    const systemPrompt = `You are a world-class film director's assistant. Your task is to interpret a user's script idea, break it down into a series of distinct storyboard shots, and then weave those shots into a cohesive script.
-    - Analyze the user's prompt to determine the number of shots.
-    - For each shot, generate: 1. A concise, descriptive title. 2. A string describing the camera movement (e.g., "Wide Shot, Pan Right", "Close-up, Dolly Zoom"). 3. A detailed prompt for image generation.
-    - After defining all shots, write a cohesive, narrative script in a single block of text that combines all the shot descriptions.
-    - You MUST return a single JSON object with two keys: "scriptText" (the full narrative script as a string) and "shots" (an array of objects, where each object has "title", "cameraMovement", and "prompt" keys).`;
+
+    const isChinese = /^[\u4e00-\u9fa5]/.test(prompt);
+    const systemPrompt = isChinese
+      ? `你是一位世界级的电影导演助手。你的任务是将用户的剧本创意分解为一系列独特的分镜画面，并将这些画面编织成一个连贯的剧本。
+- 分析用户的提示以确定分镜数量。
+- 每个分镜需要生成：1. 一个简洁的描述性标题。2. 描述镜头运动（如"全景镜头，右摇"、"特写，推拉变焦"）。3. 用于图像生成的详细描述。
+- 在定义所有分镜后，写一段连贯的叙事剧本，将所有分镜描述结合在一起。
+- 你必须返回一个包含两个键的JSON对象："scriptText"（完整的叙事剧本字符串）和"shots"（数组，每个对象包含"title"、"cameraMovement"和"prompt"键）。`
+      : `You are a world-class film director's assistant. Your task is to interpret a user's script idea, break it down into a series of distinct storyboard shots, and then weave those shots into a cohesive script.
+- Analyze the user's prompt to determine the number of shots.
+- For each shot, generate: 1. A concise, descriptive title. 2. A string describing the camera movement (e.g., "Wide Shot, Pan Right", "Close-up, Dolly Zoom"). 3. A detailed prompt for image generation.
+- After defining all shots, write a cohesive, narrative script in a single block of text that combines all the shot descriptions.
+- You MUST return a single JSON object with two keys: "scriptText" (the full narrative script as a string) and "shots" (an array of objects, where each object has "title", "cameraMovement", and "prompt" keys).`;
 
     const schema = {
       type: 'OBJECT',
