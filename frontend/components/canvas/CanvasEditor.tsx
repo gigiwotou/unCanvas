@@ -37,6 +37,7 @@ export default function CanvasEditor() {
   const [scale, setScale] = useState(1);
   const [imageAspectRatio, setImageAspectRatio] = useState('1:1');
   const [userRole, setUserRole] = useState<string>('viewer');
+  const [canvasOffset, setCanvasOffset] = useState({ x: 0, y: 0 });
 
   const canEdit = userRole === 'owner' || userRole === 'admin' || userRole === 'editor';
 
@@ -86,16 +87,41 @@ export default function CanvasEditor() {
     }
   };
 
+  const handleZoom = (deltaY: number, mouseX: number, mouseY: number) => {
+    const zoomFactor = 0.1;
+    const newScale = deltaY < 0 
+      ? Math.min(scale + zoomFactor, 3) 
+      : Math.max(scale - zoomFactor, 0.3);
+
+    if (newScale === scale) return;
+
+    const scaleChange = newScale / scale;
+    
+    const worldX = mouseX / scale - canvasOffset.x;
+    const worldY = mouseY / scale - canvasOffset.y;
+    
+    const newOffsetX = mouseX / newScale - worldX;
+    const newOffsetY = mouseY / newScale - worldY;
+
+    setScale(newScale);
+    setCanvasOffset({ x: newOffsetX, y: newOffsetY });
+  };
+
   const handleZoomIn = () => {
-    setScale(s => Math.min(s + 0.1, 3));
+    const centerX = window.innerWidth / 2;
+    const centerY = window.innerHeight / 2;
+    handleZoom(-1, centerX, centerY);
   };
 
   const handleZoomOut = () => {
-    setScale(s => Math.max(s - 0.1, 0.3));
+    const centerX = window.innerWidth / 2;
+    const centerY = window.innerHeight / 2;
+    handleZoom(1, centerX, centerY);
   };
 
   const handleResetView = () => {
     setScale(1);
+    setCanvasOffset({ x: 0, y: 0 });
   };
 
   const handleGenerate = async () => {
@@ -731,8 +757,9 @@ export default function CanvasEditor() {
           onSimilarCard={handleCardSimilar}
           canEdit={canEdit}
           scale={scale}
-          onZoomIn={handleZoomIn}
-          onZoomOut={handleZoomOut}
+          canvasOffset={canvasOffset}
+          onCanvasOffsetChange={setCanvasOffset}
+          onZoom={handleZoom}
           onSelectCard={setSelectedCard}
           onSelectStoryboard={() => {}}
           onDeleteStoryboard={handleDeleteStoryboard}

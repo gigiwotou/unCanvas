@@ -70,6 +70,7 @@ export interface Card {
   playlist?: Array<{ id: string; imageUrl: string }>;
   thumbnailUrl?: string;
   currentFrame: number;
+  aspectRatio?: string;
 }
 
 export interface ModelConfig {

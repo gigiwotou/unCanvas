@@ -22,8 +22,9 @@ interface InfiniteCanvasProps {
   onSimilarCard?: (cardId: string) => void;
   canEdit?: boolean;
   scale?: number;
-  onZoomIn?: () => void;
-  onZoomOut?: () => void;
+  canvasOffset?: { x: number; y: number };
+  onCanvasOffsetChange?: (offset: { x: number; y: number }) => void;
+  onZoom?: (deltaY: number, mouseX: number, mouseY: number) => void;
   onSelectCard?: (card: Card | null) => void;
   onSelectStoryboard?: (storyboard: Storyboard | null) => void;
   onDeleteStoryboard?: (storyboardId: string) => void;
@@ -53,8 +54,9 @@ export default function InfiniteCanvas({
   onSimilarCard,
   canEdit = true,
   scale = 1,
-  onZoomIn,
-  onZoomOut,
+  canvasOffset: externalCanvasOffset,
+  onCanvasOffsetChange,
+  onZoom,
   onSelectCard,
   onSelectStoryboard,
   onDeleteStoryboard,
@@ -65,7 +67,7 @@ export default function InfiniteCanvas({
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [connecting, setConnecting] = useState<{ from: string; storyboardId: string } | null>(null);
   const [tempConnection, setTempConnection] = useState<{ x: number; y: number } | null>(null);
-  const [canvasOffset, setCanvasOffset] = useState({ x: 0, y: 0 });
+  const [internalCanvasOffset, setInternalCanvasOffset] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
   const [resizingStoryboard, setResizingStoryboard] = useState<string | null>(null);
@@ -73,8 +75,18 @@ export default function InfiniteCanvas({
   const [expandedCards, setExpandedCards] = useState<Record<string, boolean>>({});
   const [renderKey, setRenderKey] = useState(0);
 
+  const canvasOffset = externalCanvasOffset || internalCanvasOffset;
+
+  const setCanvasOffset = (newOffset: { x: number; y: number }) => {
+    if (onCanvasOffsetChange) {
+      onCanvasOffsetChange(newOffset);
+    } else {
+      setInternalCanvasOffset(newOffset);
+    }
+  };
+
   useEffect(() => {
-    setRenderKey(k => k + 1);
+    setRenderKey(prev => prev + 1);
   }, [scale]);
 
   const handleStoryboardMouseDown = (e: React.MouseEvent, storyboard: Storyboard) => {
@@ -123,7 +135,11 @@ export default function InfiniteCanvas({
     if (isPanning) {
       const dx = (e.clientX - panStart.x) / scale;
       const dy = (e.clientY - panStart.y) / scale;
-      setCanvasOffset(prev => ({ x: prev.x + dx, y: prev.y + dy }));
+      if (onCanvasOffsetChange && externalCanvasOffset) {
+        onCanvasOffsetChange({ x: externalCanvasOffset.x + dx, y: externalCanvasOffset.y + dy });
+      } else {
+        setInternalCanvasOffset(prev => ({ x: prev.x + dx, y: prev.y + dy }));
+      }
       setPanStart({ x: e.clientX, y: e.clientY });
       return;
     }
@@ -176,7 +192,7 @@ export default function InfiniteCanvas({
         });
       }
     }
-  }, [isPanning, panStart, draggingStoryboard, draggingCard, dragOffset, canvasOffset, connecting, storyboards, onUpdateStoryboard, onUpdateCard, scale]);
+  }, [isPanning, panStart, draggingStoryboard, draggingCard, dragOffset, canvasOffset, connecting, storyboards, onUpdateStoryboard, onUpdateCard, scale, onCanvasOffsetChange, externalCanvasOffset]);
 
   const handleMouseUp = useCallback(() => {
     if (draggingCard) {
@@ -202,16 +218,15 @@ export default function InfiniteCanvas({
   const handleWheel = useCallback((e: WheelEvent) => {
     if (e.ctrlKey) {
       e.preventDefault();
-      if (e.deltaY < 0) {
-        onZoomIn?.();
-      } else {
-        onZoomOut?.();
-      }
+      const rect = canvasRef.current?.getBoundingClientRect();
+      const mouseX = rect ? e.clientX - rect.left : e.clientX;
+      const mouseY = rect ? e.clientY - rect.top : e.clientY;
+      onZoom?.(e.deltaY, mouseX, mouseY);
       requestAnimationFrame(() => {
         setRenderKey(k => k + 1);
       });
     }
-  }, [onZoomIn, onZoomOut]);
+  }, [onZoom]);
 
   const handleContextMenu = useCallback((e: MouseEvent) => {
     e.preventDefault();
